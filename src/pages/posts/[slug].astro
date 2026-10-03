@@ -4,14 +4,29 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
-  return posts.map((post) => ({
+
+  // 按日期倒序（新 → 旧），用于推导相邻篇目
+  const sorted = [...posts].sort((a, b) => {
+    const da = a.data.date ? new Date(a.data.date).getTime() : 0;
+    const db = b.data.date ? new Date(b.data.date).getTime() : 0;
+    return db - da;
+  });
+
+  return sorted.map((post, index) => ({
     params: { slug: post.id.replace(/\.md$/, '') },
-    props: { post },
+    props: {
+      post,
+      // 与旧站 Hexo 语义一致：prev = 时间上更早的一篇，next = 更新的一篇
+      prev: sorted[index + 1] ?? null,
+      next: sorted[index - 1] ?? null,
+    },
   }));
 }
 
-const { post } = Astro.props;
+const { post, prev, next } = Astro.props;
 const { Content } = await render(post);
+
+const slugOf = (p: { id: string }) => encodeURIComponent(p.id.replace(/\.md$/, ''));
 
 const formatDate = (d?: string | Date) => {
   if (!d) return '';
@@ -47,12 +62,12 @@ const formatDate = (d?: string | Date) => {
         <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs font-mono text-ink-muted mb-3">
           <span>{formatDate(post.data.date)}</span>
           {post.data.categories?.map((cat) => (
-            <a href={`/categories#cat-${encodeURIComponent(cat)}`} class="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 font-serif text-[11px] text-ink-muted hover:text-seal no-underline">
+            <a href={`/categories/${encodeURIComponent(cat)}/`} class="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 font-serif text-[11px] text-ink-muted hover:text-seal no-underline">
               {cat}
             </a>
           ))}
           {post.data.tags?.map((t) => (
-            <a href={`/tags#tag-${encodeURIComponent(t)}`} class="px-2 py-0.5 rounded bg-seal/5 font-serif text-[11px] text-seal border border-seal/15 hover:bg-seal/10 no-underline">
+            <a href={`/tags/${encodeURIComponent(t)}/`} class="px-2 py-0.5 rounded bg-seal/5 font-serif text-[11px] text-seal border border-seal/15 hover:bg-seal/10 no-underline">
               {t}
             </a>
           ))}
@@ -82,5 +97,30 @@ const formatDate = (d?: string | Date) => {
         </div>
       </footer>
     </article>
+
+    <!-- 上一篇 / 下一篇（与旧站 post.njk 的 prev/next 导航对应） -->
+    {(prev || next) && (
+      <nav class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {prev ? (
+          <a href={`/posts/${slugOf(prev)}`} class="paper-card p-4 no-underline group flex flex-col gap-1">
+            <span class="text-[10px] font-mono text-ink-faint">← 上一篇</span>
+            <span class="font-serif text-sm text-ink group-hover:text-seal transition-colors truncate">
+              {prev.data.title}
+            </span>
+          </a>
+        ) : (
+          <span aria-hidden="true"></span>
+        )}
+
+        {next && (
+          <a href={`/posts/${slugOf(next)}`} class="paper-card p-4 no-underline group flex flex-col gap-1 sm:text-right">
+            <span class="text-[10px] font-mono text-ink-faint">下一篇 →</span>
+            <span class="font-serif text-sm text-ink group-hover:text-seal transition-colors truncate">
+              {next.data.title}
+            </span>
+          </a>
+        )}
+      </nav>
+    )}
   </div>
 </BaseLayout>

@@ -1,0 +1,32 @@
+---
+interface Props {
+  currentPage: number;
+  lastPage: number;
+  prevUrl?: string;
+  nextUrl?: string;
+}
+
+const { currentPage, lastPage, prevUrl, nextUrl } = Astro.props;
+
+const baseClass = 'px-3 py-1.5 rounded-md border border-border-paper transition-colors no-underline';
+const enabledClass = `${baseClass} text-ink hover:bg-black/5 dark:hover:bg-white/5`;
+const disabledClass = `${baseClass} text-ink-faint opacity-40 cursor-not-allowed`;
+---
+
+{lastPage > 1 && (
+  <nav class="flex items-center justify-center gap-3 mt-10 text-xs font-sans" aria-label="分页">
+    {prevUrl ? (
+      <a href={prevUrl} class={enabledClass} rel="prev">上一页</a>
+    ) : (
+      <span class={disabledClass} aria-disabled="true">上一页</span>
+    )}
+
+    <span class="text-ink-muted font-mono">{currentPage} / {lastPage}</span>
+
+    {nextUrl ? (
+      <a href={nextUrl} class={enabledClass} rel="next">下一页</a>
+    ) : (
+      <span class={disabledClass} aria-disabled="true">下一页</span>
+    )}
+  </nav>
+)}

@@ -1,0 +1,103 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Pagination from '../../../components/Pagination.astro';
+import { getCollection } from 'astro:content';
+
+// 单个分类的文章列表，每页 20 篇（对应旧站 /categories/<分类>/ 的分页）
+export async function getStaticPaths({ paginate }) {
+  const posts = await getCollection('blog');
+
+  const byCategory: Record<string, typeof posts> = {};
+  posts.forEach((post) => {
+    const cats = post.data.categories && post.data.categories.length > 0
+      ? post.data.categories
+      : ['未分类'];
+    cats.forEach((c) => {
+      if (!byCategory[c]) byCategory[c] = [];
+      byCategory[c].push(post);
+    });
+  });
+
+  return Object.entries(byCategory).flatMap(([cat, list]) => {
+    const sorted = [...list].sort((a, b) => {
+      const da = a.data.date ? new Date(a.data.date).getTime() : 0;
+      const db = b.data.date ? new Date(b.data.date).getTime() : 0;
+      return db - da;
+    });
+    return paginate(sorted, { params: { cat }, props: { cat }, pageSize: 20 });
+  });
+}
+
+const { page, cat } = Astro.props;
+
+const formatDate = (d?: string | Date) => {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+};
+---
+
+<BaseLayout title={`${cat} · 分类 · yuki's stop`} description={`分类「${cat}」下的全部文卷`}>
+  <div class="py-4 sm:py-6 max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-border-paper pb-6 mb-8">
+      <div>
+        <a
+          href="/categories"
+          class="inline-flex items-center gap-1.5 text-xs font-serif text-ink-muted hover:text-seal transition-colors no-underline mb-2"
+        >
+          <span>← 全部分类</span>
+        </a>
+        <h1 class="text-2xl sm:text-3xl font-serif font-bold text-ink flex items-center gap-2.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-seal"></span>
+          <span>{cat}</span>
+        </h1>
+      </div>
+      <div class="text-xs text-ink-muted font-mono">
+        共 {page.total} 篇
+      </div>
+    </div>
+
+    <section class="paper-card p-6 sm:p-8">
+      <div class="divide-y divide-border-paper">
+        {page.data.map((post) => {
+          const slug = post.id.replace(/\.md$/, '');
+          return (
+            <article class="py-3 flex items-center justify-between gap-4 group">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="text-xs font-mono text-ink-faint w-20 flex-shrink-0">
+                  {formatDate(post.data.date)}
+                </span>
+                <a
+                  href={`/posts/${encodeURIComponent(slug)}`}
+                  class="font-serif text-sm sm:text-base text-ink group-hover:text-seal transition-colors truncate no-underline"
+                >
+                  {post.data.title}
+                </a>
+              </div>
+
+              <div class="flex items-center gap-2 flex-shrink-0 text-xs text-ink-muted">
+                {post.data.tags?.map((t) => (
+                  <span class="text-[10px] font-serif text-seal px-1.5 py-0.5 rounded bg-seal/5">
+                    {t}
+                  </span>
+                ))}
+                <span class="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+
+    <Pagination
+      currentPage={page.currentPage}
+      lastPage={page.lastPage}
+      prevUrl={page.url.prev}
+      nextUrl={page.url.next}
+    />
+  </div>
+</BaseLayout>
