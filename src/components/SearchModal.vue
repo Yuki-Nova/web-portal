@@ -14,7 +14,7 @@
           ref="inputRef"
           type="text"
           v-model="query"
-          placeholder="搜寻诗词篇名、字句、格律、标签..."
+          placeholder="搜索篇名或字句"
           class="w-full bg-transparent text-sm font-serif text-ink placeholder-ink-muted/50 focus:outline-none"
           @keydown.esc="closeModal"
           @keydown.down.prevent="selectNext"
@@ -42,11 +42,11 @@
         </div>
 
         <div v-else-if="query.trim() === ''" class="py-8 text-center text-xs font-serif text-ink-muted">
-          输入关键词（如：“临江仙”、“西风”、“七律”、“月”）检索全站诗作与文集
+          输入关键词检索
         </div>
 
         <div v-else-if="filteredResults.length === 0" class="py-8 text-center text-xs font-serif text-ink-muted">
-          未寻得与「{{ query }}」相关的文卷
+          没有找到「{{ query }}」
         </div>
 
         <div
@@ -75,8 +75,8 @@
 
       <!-- Footer Status -->
       <div class="px-4 py-2 border-t border-border-paper bg-canvas/30 flex items-center justify-between text-[11px] font-serif text-ink-muted">
-        <span>找到 {{ filteredResults.length }} 篇相关作品</span>
-        <span class="font-mono">↑ ↓ 移动选择 · Enter 访问</span>
+        <span>{{ filteredResults.length }} 条结果</span>
+        <span class="font-mono">↑↓ 选择 · Enter 打开</span>
       </div>
     </div>
   </div>

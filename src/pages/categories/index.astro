@@ -20,21 +20,21 @@ const sortedCategories = Object.keys(categoryMap).sort(
 );
 ---
 
-<BaseLayout title="分类 · yuki's stop" description="按诗体、词牌与体裁汇编之文卷分类">
+<BaseLayout title="分类 · yuki's stop" description="按体裁分类">
   <div class="py-4 sm:py-6 max-w-4xl mx-auto">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-border-paper pb-6 mb-8">
       <div>
         <div class="inline-flex items-center gap-2 text-xs font-serif text-seal mb-2">
           <span class="w-1.5 h-1.5 rounded-full bg-seal"></span>
-          <span>分类全编</span>
+          <span>分类</span>
         </div>
         <h1 class="text-2xl sm:text-3xl font-serif font-bold text-ink">
-          体裁与文萃分类
+          分类
         </h1>
       </div>
       <div class="text-xs text-ink-muted font-mono">
-        共 {sortedCategories.length} 个分类 · {allPosts.length} 篇文卷
+        共 {sortedCategories.length} 个分类 · {allPosts.length} 篇
       </div>
     </div>
 

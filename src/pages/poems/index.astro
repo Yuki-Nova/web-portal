@@ -4,15 +4,15 @@ import PoetryWall from '../../components/PoetryWall.vue';
 import poetryWallData from '../../data/poetry-wall.json';
 ---
 
-<BaseLayout title="诗词 · yuki's stop" description="诗词墙 · 依体裁与意象检索全部诗作">
+<BaseLayout title="诗词 · yuki's stop" description="全部诗作">
   <div class="max-w-4xl mx-auto py-4">
     <section class="paper-card p-6 sm:p-8">
       <div class="flex items-center justify-between border-b border-border-paper pb-3 mb-6">
         <h2 class="text-base font-serif font-bold text-ink flex items-center gap-2">
           <span class="w-2 h-2 rounded-full bg-seal"></span>
-          <span>诗词墙 · 沉浸流转</span>
+          <span>诗词墙</span>
         </h2>
-        <span class="text-xs font-serif text-ink-muted">白香词谱 / 律绝律动</span>
+        <span class="text-xs font-serif text-ink-muted">共 {poetryWallData.length} 首</span>
       </div>
 
       <PoetryWall client:load poems={poetryWallData} />

@@ -18,21 +18,21 @@ allPosts.forEach((post) => {
 const sortedTags = Object.keys(tagMap).sort((a, b) => tagMap[b] - tagMap[a]);
 ---
 
-<BaseLayout title="标签 · yuki's stop" description="按韵调声律、律绝形制汇编之诗词标签">
+<BaseLayout title="标签 · yuki's stop" description="按体裁标签">
   <div class="py-4 sm:py-6 max-w-4xl mx-auto">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-border-paper pb-6 mb-8">
       <div>
         <div class="inline-flex items-center gap-2 text-xs font-serif text-seal mb-2">
           <span class="w-1.5 h-1.5 rounded-full bg-seal"></span>
-          <span>标签索引</span>
+          <span>标签</span>
         </div>
         <h1 class="text-2xl sm:text-3xl font-serif font-bold text-ink">
-          律绝形制与意象标签
+          标签
         </h1>
       </div>
       <div class="text-xs text-ink-muted font-mono">
-        共 {sortedTags.length} 个标签 · {allPosts.length} 篇文卷
+        共 {sortedTags.length} 个标签 · {allPosts.length} 篇
       </div>
     </div>
 

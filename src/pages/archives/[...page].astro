@@ -36,7 +36,7 @@ const formatDate = (d?: string | Date) => {
 };
 
 const pageTitle = page.currentPage > 1
-  ? `文集编年 · 第 ${page.currentPage} 页 · yuki's stop`
+  ? `归档 · 第 ${page.currentPage} 页 · yuki's stop`
   : "归档 · yuki's stop";
 ---
 
@@ -47,14 +47,14 @@ const pageTitle = page.currentPage > 1
       <div>
         <div class="inline-flex items-center gap-2 text-xs font-serif text-seal mb-2">
           <span class="w-1.5 h-1.5 rounded-full bg-seal"></span>
-          <span>文集编年</span>
+          <span>归档</span>
         </div>
         <h1 class="text-2xl sm:text-3xl font-serif font-bold text-ink">
-          岁月长河 · 篇什全表
+          全部诗作
         </h1>
       </div>
       <div class="text-xs text-ink-muted font-mono">
-        全记录 · 共 {allPosts.length} 篇
+        共 {allPosts.length} 篇
       </div>
     </div>
 

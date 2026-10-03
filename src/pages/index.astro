@@ -3,16 +3,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 // 门户入口。首页不再自带独立 HTML 骨架，统一走 BaseLayout（顶部导航 + 页脚）。
 const entries = [
-  { label: '诗词墙', desc: '依体裁与意象检索诗作', href: '/poems' },
-  { label: '填词案头', desc: '153 词牌 · 平仄校验', href: '/poetry' },
-  { label: '极简影廊', desc: '影像策展空间', href: '/images' },
-  { label: '文集编年', desc: '按年岁检索全稿', href: '/archives' },
-  { label: '学术工作台', desc: '教材解析 · 独立站点', href: 'https://bookswich.yukinova.top', external: true },
+  { label: '诗词', desc: '全部诗作', href: '/poems' },
+  { label: '填词', desc: '153 个词牌', href: '/poetry' },
+  { label: '影廊', desc: '照片', href: '/images' },
+  { label: '归档', desc: '按年排列', href: '/archives' },
+  { label: '工作台', desc: '教材解析', href: 'https://bookswich.yukinova.top', external: true },
   { label: 'GitHub', desc: '源码与项目', href: 'https://github.com/Yuki-Nova', external: true },
 ];
 ---
 
-<BaseLayout title="Yuki-Nova · 个人名片" description="Yuki-Nova 的个人数字空间与文墨书斋">
+<BaseLayout title="Yuki-Nova · 个人名片" description="Yuki-Nova">
   <div class="flex flex-col items-center text-center py-6 sm:py-14 animate-fade-in">
     <!-- 圆头像 -->
     <div class="relative mb-5 group">

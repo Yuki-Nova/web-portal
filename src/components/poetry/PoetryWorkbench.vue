@@ -7,10 +7,10 @@
         <span class="w-8 h-8 seal-badge text-sm">律</span>
         <div>
           <h2 class="text-lg font-serif font-bold text-ink leading-tight">
-            词曲依律填赋
+            填词
           </h2>
           <p class="text-xs text-ink-muted font-serif mt-0.5">
-            153 经典词牌 · 实时平仄分析 · 韵位智能校验
+            153 个词牌 · 平仄与韵脚校验
           </p>
         </div>
       </div>
@@ -38,7 +38,7 @@
           @click="panelOpen = !panelOpen"
           class="px-2.5 py-1 rounded border border-border-paper text-ink hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
         >
-          {{ panelOpen ? '隐藏谱说' : '词牌谱说' }}
+          {{ panelOpen ? '隐藏说明' : '词牌说明' }}
         </button>
       </div>
     </div>
@@ -109,7 +109,7 @@
       <!-- Right Column: Cipai Lore & Info Panel -->
       <aside v-show="panelOpen" class="lg:col-span-4 paper-card p-5 sticky top-20">
         <div class="flex items-center justify-between border-b border-border-paper pb-3 mb-4 text-xs font-serif text-ink-muted">
-          <span class="font-semibold text-ink">词牌考略与格律释解</span>
+          <span class="font-semibold text-ink">词牌说明</span>
           <button @click="panelOpen = false" class="hover:text-seal">
             收起 ✕
           </button>

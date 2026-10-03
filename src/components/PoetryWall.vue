@@ -42,7 +42,7 @@
           @click="randomPoem"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border-paper bg-surface hover:bg-black/5 dark:hover:bg-white/5 text-ink text-xs font-serif transition-colors shadow-sm"
         >
-          <span>随机拾萃</span>
+          <span>随机</span>
           <span class="text-seal">✦</span>
         </button>
         <span class="text-xs font-mono text-ink-muted">
@@ -107,7 +107,7 @@
         <div class="mt-10 pt-4 border-t border-border-paper flex items-center justify-between text-xs text-ink-muted">
           <div class="flex items-center gap-2">
             <span class="w-5 h-5 seal-badge text-[10px]">印</span>
-            <span class="font-serif text-ink-muted">yuki's stop 诗录</span>
+            <span class="font-serif text-ink-muted">yuki's stop</span>
           </div>
 
           <div class="flex items-center gap-3">
@@ -115,7 +115,7 @@
               @click="copyPoem"
               class="hover:text-seal transition-colors font-serif"
             >
-              {{ copied ? '已抄录！' : '抄录诗文' }}
+              {{ copied ? '已复制' : '复制' }}
             </button>
           </div>
         </div>
