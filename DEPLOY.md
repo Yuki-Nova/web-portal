@@ -257,3 +257,30 @@ cp -a /www/server/panel/vhost/nginx/yukinova.top.conf.bak_<时间戳> \
 - 旧站点目录 `/www/wwwroot/yukinova.top` 保留 7 天做回滚，之后清理前再确认；
 - 站内链接目前是无尾斜杠形式（`/poems`），会被 nginx 301 到 `/poems/`，多一跳（同域，影响可忽略）；若要消除可改用尾斜杠链接；
 - `robots.txt` 缺失导致爬虫 404（旧站日志里早已如此），可按需补一个。
+
+## 九、旧工程清理（2026-10-03 当天执行）
+
+切换验证通过后，按要求清理了服务器上的旧工程目录，**清理前已打包归档**：
+
+| 目录 | 体积 | 状态 |
+|---|---|---|
+| `/www/wwwroot/yukinova.top`（旧 Hexo 产物） | 33 MB | 已删 |
+| `/www/wwwroot/poetry`（旧填词工具） | 67 MB | 已删 |
+| `/www/wwwroot/poetrytool` | 12 KB | 已删 |
+| **归档** `/root/_archive/website-old-20261003.tar.gz` | **41 MB** | 保留 |
+
+删除 `poetry` 时初次失败：`tool/dist/.user.ini` 与 `admin/dist/.user.ini` 带**不可变属性**（宝塔加的 `chattr +i`），须先 `chattr -i` 再删。
+
+**本地同步清理**：`PortableHexo`（765 MB，无远程备份）与 `poetry_tool`（272 MB）已删；文章源另存档于 `Website/_archive/PortableHexo-blog-source-20261003.tar.gz`（7.9 MB，含 80 篇 md 与 `_config.yml`）。`my-oss-gallery` 保留（服务器相册后端即源于它）。
+
+### ⚠️ 回滚方式已随之变化
+
+旧目录**不再位于原位**，要回滚到旧站必须先解包：
+
+```bash
+mkdir -p /www/wwwroot/_restore
+tar -xzf /root/_archive/website-old-20261003.tar.gz -C /www/wwwroot/_restore
+# 再把 nginx root 指回 /www/wwwroot/_restore/yukinova.top，并恢复 conf 备份后 reload
+```
+
+**清理后回归实测**：`/` 200、`/posts/良玉/` 200、`/search-index.json` `/gallery.json` `/api/images` 均 200、`/blog` 301 → `/poems`、未知路径 404 —— 删除旧目录未影响线上。
