@@ -1,107 +1,21 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import SidebarProfile from '../../components/SidebarProfile.astro';
 import PoetryWall from '../../components/PoetryWall.vue';
 import poetryWallData from '../../data/poetry-wall.json';
-import { getCollection } from 'astro:content';
-
-const allPosts = await getCollection('blog');
-allPosts.sort((a, b) => {
-  const dateA = a.data.date ? new Date(a.data.date).getTime() : 0;
-  const dateB = b.data.date ? new Date(b.data.date).getTime() : 0;
-  return dateB - dateA;
-});
-
-// Calculate categories & tags count
-const categoriesSet = new Set<string>();
-const tagsSet = new Set<string>();
-
-allPosts.forEach((p) => {
-  p.data.categories?.forEach((c) => categoriesSet.add(c));
-  p.data.tags?.forEach((t) => tagsSet.add(t));
-});
-
-const formatDate = (d?: string | Date) => {
-  if (!d) return '';
-  return new Date(d).toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-};
 ---
 
-<BaseLayout title="博客文集 · yuki's stop" description="个人诗词、随笔与文集总览">
-  <div class="max-w-6xl mx-auto py-4">
-    <!-- Two Column Grid (Main Content + Sidebar) -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      <!-- Main Content (8 cols) -->
-      <div class="lg:col-span-8 space-y-8">
-        <!-- Poetry Wall Interactive Card -->
-        <section class="paper-card p-6 sm:p-8">
-          <div class="flex items-center justify-between border-b border-border-paper pb-3 mb-6">
-            <h2 class="text-base font-serif font-bold text-ink flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-seal"></span>
-              <span>诗词墙 · 沉浸流转</span>
-            </h2>
-            <span class="text-xs font-serif text-ink-muted">白香词谱 / 律绝律动</span>
-          </div>
-
-          <PoetryWall client:load poems={poetryWallData} />
-        </section>
-
-        <!-- Article Feed List -->
-        <section class="paper-card p-6 sm:p-8">
-          <div class="flex items-center justify-between border-b border-border-paper pb-4 mb-6">
-            <h2 class="text-lg font-serif font-bold text-ink flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-seal"></span>
-              <span>文章存稿</span>
-            </h2>
-            <span class="text-xs font-mono text-ink-muted">共 {allPosts.length} 篇</span>
-          </div>
-
-          <div class="divide-y divide-border-paper">
-            {allPosts.map((post) => {
-              const slug = post.id.replace(/\.md$/, '');
-              return (
-                <article class="py-4 flex items-center justify-between gap-4 group">
-                  <div class="flex items-center gap-3 min-w-0">
-                    <span class="text-xs font-mono text-ink-faint w-20 flex-shrink-0">
-                      {formatDate(post.data.date)}
-                    </span>
-                    <a
-                      href={`/posts/${encodeURIComponent(slug)}`}
-                      class="font-serif text-base text-ink group-hover:text-seal transition-colors truncate no-underline font-medium"
-                    >
-                      {post.data.title}
-                    </a>
-                  </div>
-
-                  <div class="flex items-center gap-2 flex-shrink-0">
-                    {post.data.tags?.slice(0, 1).map((t) => (
-                      <span class="text-[11px] font-serif text-seal px-2 py-0.5 rounded bg-seal/5 border border-seal/15">
-                        {t}
-                      </span>
-                    ))}
-                    <span class="text-ink-faint text-xs group-hover:text-seal group-hover:translate-x-0.5 transition-all">
-                      →
-                    </span>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </section>
+<BaseLayout title="诗词 · yuki's stop" description="诗词墙 · 依体裁与意象检索全部诗作">
+  <div class="max-w-4xl mx-auto py-4">
+    <section class="paper-card p-6 sm:p-8">
+      <div class="flex items-center justify-between border-b border-border-paper pb-3 mb-6">
+        <h2 class="text-base font-serif font-bold text-ink flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-seal"></span>
+          <span>诗词墙 · 沉浸流转</span>
+        </h2>
+        <span class="text-xs font-serif text-ink-muted">白香词谱 / 律绝律动</span>
       </div>
 
-      <!-- Right Sidebar (4 cols, Image 2 Style) -->
-      <div class="lg:col-span-4 sticky top-20">
-        <SidebarProfile
-          postCount={allPosts.length}
-          catCount={categoriesSet.size}
-          tagCount={tagsSet.size}
-        />
-      </div>
-    </div>
+      <PoetryWall client:load poems={poetryWallData} />
+    </section>
   </div>
 </BaseLayout>
