@@ -9,8 +9,8 @@
 | 路由 | 内容 | 数据来源 |
 |---|---|---|
 | `/` | 个人名片 + 门户入口卡片（走 BaseLayout 统一骨架） | 静态 |
-| `/blog` | 诗词墙（纯诗词页，无存稿列表与个人信息卡） | `src/data/poetry-wall.json` |
-| `/posts/[slug]` | 文章详情页（含目录、朱砂钤印） | `src/content/blog/*.md` |
+| `/poems` | 诗词墙（纯诗词页，无存稿列表与个人信息卡） | `src/data/poetry-wall.json` |
+| `/posts/[slug]` | 文章详情页（居中单栏、朱砂钤印） | `src/content/blog/*.md` |
 | `/archives` `/categories` `/tags` | 编年表 / 分类 / 标签索引 | content collection |
 | `/images` | 影廊（353 张，纯静态快照 + 可选 OSS 实时同步） | `src/data/gallery.json` |
 | `/poetry` | 填词案头（153 词牌、平仄引擎、韵书校验） | `public/cipai.json` + `src/poetry-engine/` |
