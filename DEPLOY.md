@@ -234,19 +234,23 @@ cp -a /www/server/panel/vhost/nginx/yukinova.top.conf.bak_<时间戳> \
 1. **`nginx -s reload` 在这台机器上无效**——报 `invalid PID number "" in "/run/nginx.pid"`。宝塔的 pid 在 `/www/server/nginx/logs/nginx.pid`。正确做法：`/etc/init.d/nginx reload`，或 `kill -HUP <master pid>`。
 2. **语法检查要用宝塔自带的二进制**：`/www/server/nginx/sbin/nginx -t -c /www/server/nginx/conf/nginx.conf`。直接跑 `nginx -t` 会去检查 `/etc/nginx/nginx.conf`（系统那份），且系统二进制缺 `stream` 模块，会对宝塔配置误报 `unknown directive "stream"`。
 
-**已知遗留（非本次前端范围）**
+**相册后端已补齐（2026-10-03 当日修复）**
 
-服务器 `/www/wwwroot/images/app.js`（Sep 5 版）**没有** `GET /api/images` 与 `DELETE /api/images` 两个路由，而本地仓库 `my-oss-gallery/app.js` 有。因此相册的：
+切换后发现服务器 `/www/wwwroot/images/app.js`（Sep 5 版）缺少 `GET /api/images` 与 `DELETE /api/images` 两条路由，导致「实时同步 / 删除图片」不可用。已将本地 `my-oss-gallery` 的 `app.js` 部署上去（服务器备份 `app.js.bak_20261003-140004`），`pm2 restart images-server` 后验证：
 
-| 功能 | 状态 |
+| 检查 | 结果 |
 |---|---|
-| 分类读取 `GET /api/categories` | ✅ 200 |
-| 登录取 token `POST /api/auth/login` | ✅ 401（路由在） |
-| 保存分类 `PUT /api/categories` | ✅ 可用 |
-| **实时同步 `GET /api/images`** | ❌ 后端无此路由 |
-| **删除图片 `DELETE /api/images`** | ❌ 后端无此路由 |
+| `GET /api/images`（公网 https） | **200**，`ok=true`，**360 张**（比构建期快照 353 张多 7 张，实时同步确实生效） |
+| `GET /api/categories`（公网） | 200，262 条分类 |
+| `DELETE /api/images` 无 token | **401 unauthorized**（正确拒绝；探针使用不存在的 objectKey，未造成任何删除） |
+| `POST /api/auth/login` | 401（路由存在） |
+| 启动日志 | `🔒 写接口已启用鉴权（X-Auth-Token / ?token=）`、`✅ OSS 连接成功` |
 
-前端对此是**静默降级**（首屏照常显示静态快照，不会报错），只有用户主动点击那两个按钮才会提示失败。要恢复这两项功能，需把本地 `my-oss-gallery` 的后端同步到服务器（**属另一个项目的变更，需另行确认**）。
+`ADMIN_PASSWORD` 已在 `.env` 中配置，故删除功能可用（前端点击后会要求输入口令换取 token）。
+
+顺带说明该版本的两处行为变化：写接口由 fail-open 改为 **fail-closed**（未配 `ADMIN_PASSWORD` 时拒绝而非放行，更安全）；新增 CORS 响应头 `Access-Control-Allow-Origin: *`（写操作仍需 `X-Auth-Token`，读接口本就是公开数据）。
+
+**回滚该后端**：`cp -a /www/wwwroot/images/app.js.bak_20261003-140004 /www/wwwroot/images/app.js && pm2 restart images-server`
 
 **收尾建议**
 
