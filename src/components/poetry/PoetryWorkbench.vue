@@ -126,12 +126,12 @@
  *
  * 与引擎的接口约定（勿凭印象改，以 composables 实际签名为准）：
  *   useCipai()                          → { list }                       （无参）
- *   usePattern(cipaiListRef)            → { selectedId, currentPattern, groupedPatterns, selectPattern }（位置参数）
+ *   usePattern(cipaiListRef)            → { selectedId, currentPattern, groupedPatterns, selectPattern(id) }（位置参数）
  *   useAnalysis(text, pattern, override)→ { analyzing, matchResults, stats, errors,
  *                                           multiToneList, rhymeResult, effectiveRhymeBook, setToneOverride }（位置参数）
  *   useDraft({ text, patternId, rhymeBook }) → { load, clear, hasDraft, restored, savedAt }（对象参数，内部自动落盘）
  */
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import PatternSelector from './PatternSelector.vue';
 import PatternPreview from './PatternPreview.vue';
 import PoetryIDE from './PoetryIDE.vue';
@@ -215,11 +215,24 @@ const clearDraft = () => {
   draftRestored.value = false;
 };
 
-// 谱面/错误列表跳转：两者都回调 (line, col)，落到编辑器暴露的 jumpTo
+/**
+ * 谱面跳转：目标行尚未创建时自动补空行（旧项目 TODO B1.5）。
+ * 例：只输入了第 1 行时点击第 8 行 → 自动补齐到 8 行，再定位光标。
+ */
 const onPreviewJump = (line, col) => {
-  ideRef.value?.jumpTo?.(line, col ?? 0);
+  const text = inputText.value;
+  const currentLineCount = text === '' ? 1 : text.split('\n').length;
+  const targetLine = line + 1;
+  if (targetLine > currentLineCount) {
+    inputText.value = text + '\n'.repeat(targetLine - currentLineCount);
+  }
+  // 等 textarea 更新完成后再定位光标，确保目标行已存在
+  nextTick(() => {
+    ideRef.value?.jumpTo?.(line, col ?? 0);
+  });
 };
 
+// 错误列表跳转：错误必然出现在已有行上，无需补行
 const onJumpToError = (line, col) => {
   ideRef.value?.jumpTo?.(line, col ?? 0);
 };
