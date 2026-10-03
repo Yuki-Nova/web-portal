@@ -33,7 +33,15 @@
 
       <!-- Search Results List -->
       <div class="overflow-y-auto flex-1 divide-y divide-border-paper p-2">
-        <div v-if="query.trim() === ''" class="py-8 text-center text-xs font-serif text-ink-muted">
+        <div v-if="indexLoading" class="py-8 text-center text-xs font-serif text-ink-muted">
+          正在装载检索索引...
+        </div>
+
+        <div v-else-if="indexError" class="py-8 text-center text-xs font-serif text-red-700 dark:text-red-400">
+          检索索引加载失败：{{ indexError }}
+        </div>
+
+        <div v-else-if="query.trim() === ''" class="py-8 text-center text-xs font-serif text-ink-muted">
           输入关键词（如：“临江仙”、“西风”、“七律”、“月”）检索全站诗作与文集
         </div>
 
@@ -80,27 +88,47 @@ import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue';
 /**
  * 全文搜索弹窗。
  *
- * 注意：本组件挂在 BaseLayout 的 body 末尾，**不要**改回 Vue 的
- * <Teleport to="body">——它在 Astro 岛内会在 hydration 时把整个 <header>
- * 从 DOM 中移除（见 AGENTS.md 坑点一）。触发按钮是独立的 SearchTrigger.vue，
- * 通过 `shiro:open-search` 全局事件与本组件通信。
+ * 两条约束（都踩过坑，别改回去）：
+ *  1. 本组件挂在 BaseLayout 的 body 末尾，**不要**用 Vue 的 <Teleport to="body">——
+ *     它在 Astro 岛内会在 hydration 时把整个 <header> 从 DOM 中移除（见 AGENTS.md 坑点一）。
+ *  2. 检索索引**不要**再当作 props 从布局内联进来（那会让每页 HTML 多背 20+KB），
+ *     改为打开弹窗时按需 fetch /search-index.json，并在会话内缓存。
  */
-const props = defineProps({
-  posts: {
-    type: Array,
-    required: true,
-  },
-});
+const INDEX_URL = '/search-index.json';
 
 const isOpen = ref(false);
 const query = ref('');
 const selectedIndex = ref(0);
 const inputRef = ref(null);
 
+// 检索索引（按需加载，模块级缓存跨开合复用）
+const indexData = ref([]);
+const indexLoading = ref(false);
+const indexError = ref(null);
+
+async function ensureIndex() {
+  if (indexData.value.length || indexLoading.value) return;
+  indexLoading.value = true;
+  indexError.value = null;
+  try {
+    const res = await fetch(INDEX_URL);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('索引格式异常');
+    indexData.value = data;
+  } catch (err) {
+    indexError.value = err.message;
+    console.error('[SearchModal] 检索索引加载失败:', err);
+  } finally {
+    indexLoading.value = false;
+  }
+}
+
 const openModal = () => {
   isOpen.value = true;
   query.value = '';
   selectedIndex.value = 0;
+  ensureIndex();
   nextTick(() => {
     inputRef.value?.focus();
   });
@@ -114,12 +142,12 @@ const filteredResults = computed(() => {
   const q = query.value.trim().toLowerCase();
   if (!q) return [];
 
-  return props.posts
+  return indexData.value
     .map((p) => {
       const titleMatch = (p.title || '').toLowerCase().includes(q);
       const catMatch = (p.categories || []).some((c) => c.toLowerCase().includes(q));
       const tagMatch = (p.tags || []).some((t) => t.toLowerCase().includes(q));
-      const body = (p.rawContent || p.body || '').replace(/---[\s\S]*?---/, '');
+      const body = (p.body || '').replace(/---[\s\S]*?---/, '');
       const bodyIdx = body.toLowerCase().indexOf(q);
 
       if (titleMatch || catMatch || tagMatch || bodyIdx !== -1) {

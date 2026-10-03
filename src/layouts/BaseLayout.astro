@@ -3,7 +3,6 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import SearchModal from '../components/SearchModal.vue';
 import { ClientRouter } from 'astro:transitions';
-import { getCollection } from 'astro:content';
 import '../styles/global.css';
 
 interface Props {
@@ -17,17 +16,7 @@ const {
 } = Astro.props;
 
 const currentPath = Astro.url.pathname;
-
-// Load posts for global full-text search
-const allBlogPosts = await getCollection('blog');
-const searchPosts = allBlogPosts.map((p) => ({
-  slug: p.id.replace(/\.md$/, ''),
-  title: p.data.title,
-  date: p.data.date ? new Date(p.data.date).toLocaleDateString('zh-CN') : '',
-  categories: p.data.categories || [],
-  tags: p.data.tags || [],
-  body: p.body || '',
-}));
+// 搜索索引不再内联到页面，改由 SearchModal 打开时按需拉取 /search-index.json
 ---
 
 <!doctype html>
@@ -40,13 +29,22 @@ const searchPosts = allBlogPosts.map((p) => ({
     <title>{title}</title>
     <meta name="description" content={description} />
 
-    <!-- Google Fonts: Noto Serif SC & Inter -->
+    <!-- Google Fonts（异步加载）：media=print 先不参与渲染阻塞，加载完再切回 all。
+         外网不可达时首屏不会再被字体请求拖住；无 JS 场景由 noscript 兜底。 -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      />
+    </noscript>
 
     <!-- Astro View Transitions for seamless app-like navigation -->
     <ClientRouter />
@@ -78,6 +76,6 @@ const searchPosts = allBlogPosts.map((p) => ({
     {/* 搜索弹窗必须挂在 body 末尾（不在 Header 的 backdrop-blur 容器内，
         才能用 fixed 覆盖全屏），且不能用 Vue 的 Teleport —— 见 AGENTS.md 坑点一。
         触发按钮在 Header 内（SearchTrigger），通过 shiro:open-search 事件通信。 */}
-    <SearchModal client:idle posts={searchPosts} />
+    <SearchModal client:idle />
   </body>
 </html>
