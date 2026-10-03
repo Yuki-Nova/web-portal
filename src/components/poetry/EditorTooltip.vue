@@ -1,5 +1,4 @@
 <template>
-  <Teleport to="body">
     <div v-if="visible" class="editor-tooltip" :style="tooltipStyle">
       <template v-if="error">
         <div class="et-header">
@@ -40,7 +39,6 @@
         </div>
       </template>
     </div>
-  </Teleport>
 </template>
 
 <script setup>

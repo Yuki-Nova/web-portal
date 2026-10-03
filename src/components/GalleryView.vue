@@ -100,7 +100,6 @@
     </div>
 
     <!-- Darkroom Lightbox Modal -->
-    <Teleport to="body">
       <div
         v-if="lightboxOpen"
         class="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 transition-all duration-300"
@@ -206,10 +205,8 @@
           </div>
         </div>
       </div>
-    </Teleport>
 
     <!-- Password Prompt Modal for Admin Operations -->
-    <Teleport to="body">
       <div
         v-if="authModalOpen"
         class="fixed inset-0 z-[120] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
@@ -246,7 +243,6 @@
           </div>
         </div>
       </div>
-    </Teleport>
   </div>
 </template>
 
