@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import GalleryView from '../../components/GalleryView.vue';
-import galleryData from '../../data/gallery.json';
 ---
 
 <BaseLayout title="极简影廊 · yuki's stop" description="个人摄影与插画策展空间，纯静态极简画廊">
@@ -23,6 +22,6 @@ import galleryData from '../../data/gallery.json';
     </div>
 
     <!-- Gallery View Component -->
-    <GalleryView client:load images={galleryData} />
+    <GalleryView client:load />
   </div>
 </BaseLayout>

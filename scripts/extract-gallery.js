@@ -3,7 +3,7 @@ import path from 'node:path';
 
 const htmlPath = path.resolve('../my-oss-gallery/docs/index.html');
 const catPath = path.resolve('../my-oss-gallery/categories.json');
-const outPath = path.resolve('src/data/gallery.json');
+const outPath = path.resolve('public/gallery.json');
 
 const html = fs.readFileSync(htmlPath, 'utf8');
 const dataMatch = html.match(/<script id="gallery-data" type="application\/json">([\s\S]*?)<\/script>/);

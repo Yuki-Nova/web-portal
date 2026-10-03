@@ -33,7 +33,7 @@
         </button>
 
         <span class="text-xs font-mono text-ink-muted">
-          共 {{ filteredImages.length }} 幅影像
+          {{ loading ? '装载中...' : `共 ${filteredImages.length} 幅影像` }}
         </span>
       </div>
     </div>
@@ -47,8 +47,18 @@
       {{ toastMessage }}
     </div>
 
+    <!-- 载入态 -->
+    <div v-if="loading" class="paper-card p-12 text-center text-ink-muted font-serif my-8">
+      正在装载影廊...
+    </div>
+
+    <!-- 载入失败 -->
+    <div v-else-if="loadError" class="paper-card p-12 text-center text-ink-muted font-serif my-8">
+      影廊数据加载失败：{{ loadError }}
+    </div>
+
     <!-- Image Grid -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div v-else class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
       <div
         v-for="(img, idx) in paginatedImages"
         :key="img.key"
@@ -76,7 +86,7 @@
     </div>
 
     <!-- Empty state -->
-    <div v-if="filteredImages.length === 0" class="paper-card p-12 text-center text-ink-muted font-serif my-8">
+    <div v-if="!loading && !loadError && filteredImages.length === 0" class="paper-card p-12 text-center text-ink-muted font-serif my-8">
       当前分类暂无影像作品
     </div>
 
@@ -249,15 +259,27 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 
-const props = defineProps({
-  images: {
-    type: Array,
-    required: true,
-  },
-});
+// 相册数据：构建期静态快照（public/gallery.json）+ 可选的 OSS 服务端同步
+const allImages = ref([]);
+const loading = ref(true);
+const loadError = ref(null);
 
-// Live image collection state
-const allImages = ref([...props.images]);
+async function loadGallerySnapshot() {
+  loading.value = true;
+  loadError.value = null;
+  try {
+    const res = await fetch('/gallery.json');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('数据格式异常');
+    allImages.value = data;
+  } catch (err) {
+    loadError.value = err.message;
+    console.error('[GalleryView] 相册快照加载失败:', err);
+  } finally {
+    loading.value = false;
+  }
+}
 const activeCategory = ref('全部');
 const currentPage = ref(1);
 const pageSize = 24;
@@ -550,9 +572,10 @@ const handleKeyDown = (e) => {
   if (e.key === 'Escape') closeLightbox();
 };
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('keydown', handleKeyDown);
-  // 页面载入时静默尝试与 OSS 服务端对齐，失败则直接展示静态快照
+  // 先加载构建期静态快照，再静默尝试与服务端对齐（后端不可达就保持快照）
+  await loadGallerySnapshot();
   fetchLiveImages({ silent: true });
 });
 
