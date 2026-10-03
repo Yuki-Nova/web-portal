@@ -82,3 +82,4 @@ scripts/extract-gallery.js 从旧相册静态快照抽取 gallery.json
 - 四站事实基准：[../docs/WEBSITE_ARCHITECTURE.md](../docs/WEBSITE_ARCHITECTURE.md)
 - 静态化实施记录：[../docs/INTEGRATION_PLAN.md](../docs/INTEGRATION_PLAN.md)
 - 项目开发约定与坑点：[AGENTS.md](AGENTS.md)
+- 上线部署方案：[DEPLOY.md](DEPLOY.md)
