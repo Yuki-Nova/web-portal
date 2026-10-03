@@ -1,20 +1,12 @@
 ---
 import ThemeToggle from './ThemeToggle.vue';
-import SearchModal from './SearchModal.vue';
+import SearchTrigger from './SearchTrigger.vue';
 
 interface Props {
   currentPath?: string;
-  searchPosts?: Array<{
-    slug: string;
-    title: string;
-    date: string;
-    categories: string[];
-    tags: string[];
-    body: string;
-  }>;
 }
 
-const { currentPath = '/', searchPosts = [] } = Astro.props;
+const { currentPath = '/' } = Astro.props;
 
 // Nav links with icons matching Image 1
 const navItems = [
@@ -34,7 +26,7 @@ const navItems = [
     <!-- Left: Utility Icons (Theme Toggle + Search) as in Image 1 -->
     <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
       <ThemeToggle client:load />
-      <SearchModal client:idle posts={searchPosts} />
+      <SearchTrigger client:load />
     </div>
 
     <!-- Center/Right: Brand Name + Project Buttons with Icons (Image 1 Style) -->

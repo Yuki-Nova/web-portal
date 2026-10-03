@@ -42,7 +42,7 @@ xxx: 'rgb(var(--color-xxx-rgb) / <alpha-value>)',
 
 ## 三、已定位的坑点
 
-### 1. `<Teleport to="body">` 会删掉整个 `<header>`（**未修，高优先级**）
+### 1. `<Teleport to="body">` 会删掉整个 `<header>`（**已修复**，2026-10-03）
 
 - **现象**：真实浏览器打开任意使用 `BaseLayout` 的页面，顶部导航（header）连同其中的主题切换、搜索两个岛一起从 DOM 消失；填词页工作台也不渲染。禁用 JS 时一切正常，因此极易误判为「CSS 问题」。
 - **根因**：`src/components/SearchModal.vue:19` 的 `<Teleport to="body">` 在 Astro 岛的 hydration 过程中把 header 从 DOM 中移除。
@@ -58,11 +58,16 @@ xxx: 'rgb(var(--color-xxx-rgb) / <alpha-value>)',
   | `<Teleport to="body" disabled>` | **恢复正常**（islands=3） |
   | 移除 `<ClientRouter />` | 仍消失（排除 View Transitions） |
 
-- **修复方向**：弹窗用 `fixed inset-0` 覆盖全屏，但 Header 有 `backdrop-blur-md`（会创建包含块），所以不能简单就地渲染。可选：① 把搜索弹窗拆成独立岛挂在 `BaseLayout` 的 body 末尾（触发按钮留在 Header，用事件或全局状态通信）；② 关掉 Header 的 `backdrop-blur` 后取消 Teleport。修完务必用第一节的隔离实验回归。
+- **已采用的修复**：把搜索功能拆成两半——
+  - `src/components/SearchTrigger.vue`：触发按钮留在 Header，点击派发 `shiro:open-search` 全局事件；
+  - `src/components/SearchModal.vue`：**去掉 `<Teleport>`**，改由 `BaseLayout.astro` 挂到 `<Footer />` 之后的 body 末尾，直接以 `fixed inset-0` 覆盖全屏（不在 `backdrop-blur` 容器内，无需 Teleport），并监听上述事件。
+
+  **不要**把弹窗挪回 Header，也**不要**再加回 `<Teleport>`。若将来确需 Teleport，先跑上表的隔离实验确认。
+- **回归要点**：`agent-browser eval 'Array.from(document.body.children).map(e=>e.tagName).join(",")'` 应为 `HEADER,MAIN,FOOTER,SCRIPT,ASTRO-ISLAND`；`document.querySelectorAll("astro-island").length` 应为 4；`agent-browser errors` 应为空；点击 Header 第二个按钮后 `input[placeholder]` 存在且输入关键词能出结果。
 
 ### 2. 全站文章正文被内联进每一页
 
-`BaseLayout` 把 80 篇文章的 `body` 传给 Header → SearchModal，导致 SearchModal 的 `astro-island` 标签长达 26KB（props 属性），87 个 HTML 合计 5.1MB，文章详情页 43KB、`/blog` 153KB、`/images` 259KB（相册 353 张图的 JSON 也内联）。优化方向是改静态索引按需加载。
+`BaseLayout` 把 80 篇文章的 `body` 作为 props 传给挂在页尾的 `SearchModal`，导致其 `astro-island` 标签长达 26KB（props 属性），87 个 HTML 合计 5.1MB，文章详情页 43KB、`/blog` 153KB、`/images` 259KB（相册 353 张图的 JSON 也内联）。优化方向是改静态索引按需加载。
 
 ### 3. 相册接口是「可选后端」
 

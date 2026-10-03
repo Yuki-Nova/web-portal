@@ -1,6 +1,7 @@
 ---
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import SearchModal from '../components/SearchModal.vue';
 import { ClientRouter } from 'astro:transitions';
 import { getCollection } from 'astro:content';
 import '../styles/global.css';
@@ -68,10 +69,15 @@ const searchPosts = allBlogPosts.map((p) => ({
     </script>
   </head>
   <body class="bg-canvas text-ink antialiased min-h-screen flex flex-col font-sans transition-colors duration-200">
-    <Header currentPath={currentPath} searchPosts={searchPosts} />
+    <Header currentPath={currentPath} />
     <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <slot />
     </main>
     <Footer />
+
+    {/* 搜索弹窗必须挂在 body 末尾（不在 Header 的 backdrop-blur 容器内，
+        才能用 fixed 覆盖全屏），且不能用 Vue 的 Teleport —— 见 AGENTS.md 坑点一。
+        触发按钮在 Header 内（SearchTrigger），通过 shiro:open-search 事件通信。 */}
+    <SearchModal client:idle posts={searchPosts} />
   </body>
 </html>

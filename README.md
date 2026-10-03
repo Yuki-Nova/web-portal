@@ -66,7 +66,8 @@ scripts/extract-gallery.js 从旧相册静态快照抽取 gallery.json
 
 | 严重度 | 问题 | 位置 |
 |---|---|---|
-| **高（未修）** | Vue `<Teleport to="body">` 与 Astro 岛组合，会把整个 `<header>` 从 DOM 中移除（含两个岛），真实浏览器下所有内页顶部导航消失 | `src/components/SearchModal.vue:19`，复现与定位见 `AGENTS.md` |
+| **高（未修）** | `/poetry` 填词工作台不渲染：PoetryWorkbench 岛始终为空注释，console 报 Vue `TypeError: Cannot read properties of undefined (reading 'value' / 'length')` | `src/components/poetry/PoetryWorkbench.vue` 渲染链 |
+| ~~高~~ 已修（2026-10-03） | Vue `<Teleport to="body">` 与 Astro 岛组合会把整个 `<header>` 从 DOM 中移除；已改为触发按钮与弹窗分离部署 | `src/components/SearchTrigger.vue` + `SearchModal.vue`，见 `AGENTS.md` |
 | 中 | 全站搜索把 80 篇文章正文内联进**每个**页面（SearchModal 岛标签 26KB），87 页 HTML 合计 5.1MB | `src/layouts/BaseLayout.astro` |
 | 中 | 首页 `/` 自带完整 `<html>` 骨架，不使用 BaseLayout，与内页是两套导航体系 | `src/pages/index.astro` |
 | 低 | Header 硬编码深色条 `#1a1c20` + emoji 图标，与纸墨浅色令牌体系不一致 | `src/components/Header.astro:32` |
