@@ -8,7 +8,7 @@
 
 | 路由 | 内容 | 数据来源 |
 |---|---|---|
-| `/` | 个人名片页（独立骨架，不使用 BaseLayout） | 静态 |
+| `/` | 个人名片 + 门户入口卡片（走 BaseLayout 统一骨架） | 静态 |
 | `/blog` | 诗词墙 + 文章存稿列表 + 侧栏名片 | `src/data/poetry-wall.json` + content collection |
 | `/posts/[slug]` | 文章详情页（含目录、朱砂钤印） | `src/content/blog/*.md` |
 | `/archives` `/categories` `/tags` | 编年表 / 分类 / 标签索引 | content collection |
@@ -70,8 +70,8 @@ scripts/extract-gallery.js 从旧相册静态快照抽取 gallery.json
 | ~~高~~ 已修（2026-10-03） | Vue `<Teleport to="body">` 与 Astro 岛组合会把整个 `<header>` 从 DOM 中移除；已改为触发按钮与弹窗分离部署 | `src/components/SearchTrigger.vue` + `SearchModal.vue`，见 `AGENTS.md` |
 | ~~中~~ 已修（2026-10-03） | 全站搜索曾把 80 篇正文内联进**每个**页面（87 页 HTML 合计 5.1MB）；现改为构建期静态索引 `/search-index.json`，打开搜索时才加载 | `src/pages/search-index.json.js` |
 | ~~中~~ 已修（2026-10-03） | Google Fonts 外链会拖住 `load` 事件（外网受限时首屏被拖慢）；已改为 `media="print"` 非阻塞加载 + `noscript` 兜底 | `src/layouts/BaseLayout.astro` |
-| 中 | 首页 `/` 自带完整 `<html>` 骨架，不使用 BaseLayout，与内页是两套导航体系 | `src/pages/index.astro` |
-| 低 | Header 硬编码深色条 `#1a1c20` + emoji 图标，与纸墨浅色令牌体系不一致 | `src/components/Header.astro:32` |
+| ~~中~~ 已修（2026-10-03） | 首页曾自带独立 `<html>` 骨架、拿不到全站导航；已并入 BaseLayout，重做为「名片 + 门户入口卡片」 | `src/pages/index.astro` |
+| ~~低~~ 已修（2026-10-03） | Header 曾硬编码深色条 `#1a1c20` + emoji 图标；已改为纸墨令牌体系（纸底 + 墨字 + 印章红下划线）并去除 emoji | `src/components/Header.astro` |
 | 低 | 无自动化测试（旧 poetry_tool 的 vitest 用例未随引擎迁移） | — |
 
 ## 相关文档

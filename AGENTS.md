@@ -40,7 +40,20 @@ xxx: 'rgb(var(--color-xxx-rgb) / <alpha-value>)',
 
 `public/gallery.json` 由 `scripts/extract-gallery.js` 从旧相册静态快照抽取（读 `../my-oss-gallery/docs/index.html` + `categories.json`）。相册内容有变动时重跑 `node scripts/extract-gallery.js`，不要手编 JSON。
 
-> `src/data/gallery.json` 是迁移期的历史副本，已不被任何页面引用；确认无用后可删除（**删除前先与用户确认**）。
+### 4. 全站布局统一走 BaseLayout
+
+除 `BaseLayout.astro` 自身外，**任何页面都不要自带 `<!doctype html>` / `<html>` / `<body>`**。首页原先就是一套独立骨架，因此它拿不到全站导航；2026-10-03 已并入。
+
+```astro
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="页面标题" description="页面描述">
+  ...页面内容...
+</BaseLayout>
+```
+
+导航项集中在 `Header.astro` 的 `navItems`（纯文字，**不要加 emoji 图标**），当前页由 `aria-current="page"` 标记、以印章红下划线高亮。
 
 ## 三、已定位的坑点
 
