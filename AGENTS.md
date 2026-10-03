@@ -73,6 +73,27 @@ xxx: 'rgb(var(--color-xxx-rgb) / <alpha-value>)',
 
 `GalleryView.vue` 会请求 `/api/images`、`/api/auth/login`、`/api/categories`（生产由 Nginx 反代到 `images-server`）。页面载入时**静默**尝试同步，失败即退回构建期静态快照，不弹错误提示；只有用户手动点「实时同步」才提示失败。改动这段时别把静默降级去掉。
 
+### 4. 填词容器必须按 composables 的真实签名调用
+
+`PoetryWorkbench.vue` 原先按一套并不存在的 API 书写（`useAnalysis({text, pattern, rhymeBook})`、`useDraft(selectedId)`、解构 `updateMultiToneOverride`/`loadDraft`/`saveDraft`/`draftRestored` 等），导致 `onMounted` 调用未定义函数直接抛错、整个岛白屏。**改任何调用前先读 composables 源码**，真实契约如下：
+
+| 位置 | 真实签名 |
+|---|---|
+| `useCipai()` | 无参 → `{ list }` |
+| `usePattern(cipaiListRef)` | 位置参数 → `{ selectedId, currentPattern, groupedPatterns, selectPattern(id) }` |
+| `useAnalysis(text, pattern, rhymeBookOverride)` | 位置参数 → `{ analyzing, matchResults, stats, errors, multiToneList, rhymeResult, effectiveRhymeBook, setToneOverride(line, col, char, tone) }` |
+| `useDraft({ text, patternId, rhymeBook })` | 对象参数 → `{ load, clear, hasDraft, restored, savedAt }`，内部已 watch 自动落盘，**没有** `saveDraft` |
+| `PatternSelector` | `emit('select', id)` —— 抛**字符串 id**，不是对象 |
+| `PatternPreview` / `ErrorPanel` | `emit('jump', line, col)` —— 两个位置参数 |
+| `EditorTooltip` | `emit('select', { line, col, char, candidate })` |
+| `PoetryIDE` | `defineExpose({ jumpTo(line, col) })` |
+
+韵书传给 `useAnalysis` 的第三参数是**用户覆盖值**；传空串即交给引擎按体裁自动推导（诗体→新韵，词牌→词林正韵）。
+
+### 5. 全项目禁止 `<Teleport>`
+
+Astro 岛内使用 Vue 的 `<Teleport>` 会在 hydration 时破坏宿主 DOM（详见坑点一，已在 `SearchModal` / `EditorTooltip` / `GalleryView` 三处踩过）。弹窗一律就地 `fixed` 定位（确认祖先没有 transform / filter / backdrop-filter），或作为独立岛挂到 `BaseLayout` 的 body 末尾。
+
 ## 四、改动后的验证流程
 
 1. `npm run build`（必须 87 页全绿）。
