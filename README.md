@@ -17,7 +17,7 @@
 | `/poetry` | 填词案头（153 词牌、平仄引擎、韵书校验） | `public/cipai.json` + `src/poetry-engine/` |
 | `/404` | 未寻得页（部署时 Nginx 需配 `error_page 404 /404.html;` 才生效） | 静态 |
 
-`bookswich.yukinova.top` 是**外链**，不在本工程内，代码不合并。
+`bookswich`（教材解析工作台）不在本工程内，代码不合并；门户导航与名片页**不提供入口**（2026-10-03 按用户要求移除）。
 
 ## 怎么跑
 
