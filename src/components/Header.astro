@@ -8,66 +8,59 @@ interface Props {
 
 const { currentPath = '/' } = Astro.props;
 
-// Nav links with icons matching Image 1
+// 全站导航。刻意使用纯文字（不用 emoji 图标），与「纸墨·新文人」体系一致：
+// 纸底 + 墨色文字 + 印章红高亮当前项。
 const navItems = [
-  { label: '首页', href: '/', icon: '🏰' },
-  { label: '博客', href: '/blog', icon: '📝' },
-  { label: '填词', href: '/poetry', icon: '📜' },
-  { label: '相册', href: '/images', icon: '📷' },
-  { label: '分类', href: '/categories', icon: '📁' },
-  { label: '标签', href: '/tags', icon: '🏷️' },
-  { label: '归档', href: '/archives', icon: '📰' },
-  { label: '工作台', href: 'https://bookswich.yukinova.top', icon: '⚙️', external: true },
+  { label: '首页', href: '/' },
+  { label: '博客', href: '/blog' },
+  { label: '填词', href: '/poetry' },
+  { label: '相册', href: '/images' },
+  { label: '分类', href: '/categories' },
+  { label: '标签', href: '/tags' },
+  { label: '归档', href: '/archives' },
+  { label: '工作台', href: 'https://bookswich.yukinova.top', external: true },
 ];
 ---
 
-<header class="sticky top-0 z-50 w-full border-b border-[#2b2d31] bg-[#1a1c20]/95 dark:bg-[#121316]/95 backdrop-blur-md text-white transition-colors duration-200">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-    <!-- Left: Utility Icons (Theme Toggle + Search) as in Image 1 -->
-    <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+<header class="sticky top-0 z-50 w-full border-b border-border-paper bg-canvas/90 backdrop-blur-md transition-colors duration-200">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3 sm:gap-6">
+    <!-- 品牌 -->
+    <a
+      href="/"
+      class="font-serif font-bold text-ink text-sm sm:text-base tracking-widest no-underline hover:text-seal transition-colors flex-shrink-0"
+    >
+      Yuki's World
+    </a>
+
+    <!-- 主导航 -->
+    <nav class="flex items-center gap-0.5 sm:gap-1 text-xs sm:text-sm font-serif overflow-x-auto no-scrollbar">
+      {navItems.map((item) => {
+        const isActive = !item.external && (
+          item.href === '/' ? currentPath === '/' : currentPath.startsWith(item.href)
+        );
+        return (
+          <a
+            href={item.href}
+            target={item.external ? '_blank' : undefined}
+            rel={item.external ? 'noopener noreferrer' : undefined}
+            aria-current={isActive ? 'page' : undefined}
+            class={`relative px-2 sm:px-2.5 py-2 transition-colors no-underline whitespace-nowrap ${
+              isActive ? 'text-seal font-semibold' : 'text-ink-muted hover:text-ink'
+            }`}
+          >
+            {item.label}
+            {isActive && (
+              <span class="absolute bottom-0 left-1.5 right-1.5 h-[2px] bg-seal rounded-full"></span>
+            )}
+          </a>
+        );
+      })}
+    </nav>
+
+    <!-- 工具区：主题切换 + 搜索 -->
+    <div class="flex items-center gap-1.5 flex-shrink-0">
       <ThemeToggle client:load />
       <SearchTrigger client:load />
     </div>
-
-    <!-- Center/Right: Brand Name + Project Buttons with Icons (Image 1 Style) -->
-    <nav class="flex items-center gap-3 sm:gap-6 overflow-x-auto no-scrollbar">
-      <!-- Site Brand Name -->
-      <a href="/" class="font-serif font-bold text-white/95 hover:text-white text-sm sm:text-base tracking-wider no-underline flex-shrink-0 transition-colors">
-        Yuki's World
-      </a>
-
-      <!-- Navigation Items with Emojis & Bold Underline Active Indicator -->
-      <div class="flex items-center gap-1 sm:gap-3 text-xs sm:text-sm font-serif">
-        {navItems.map((item) => {
-          const isActive = !item.external && (
-            item.href === '/'
-              ? currentPath === '/'
-              : currentPath.startsWith(item.href)
-          );
-          return (
-            <a
-              href={item.href}
-              target={item.external ? '_blank' : undefined}
-              rel={item.external ? 'noopener noreferrer' : undefined}
-              class={`relative px-2 sm:px-2.5 py-4 transition-colors flex items-center gap-1.5 flex-shrink-0 no-underline ${
-                isActive
-                  ? 'text-white font-semibold'
-                  : 'text-white/60 hover:text-white/90'
-              }`}
-            >
-              <span class="text-xs sm:text-sm">{item.icon}</span>
-              <span>{item.label}</span>
-              {/* Bold Underline for Active Item (Image 1 Style) */}
-              {isActive && (
-                <span class="absolute bottom-0 left-1 right-1 h-[2.5px] bg-white rounded-full"></span>
-              )}
-            </a>
-          );
-        })}
-      </div>
-    </nav>
-
-    <!-- Empty Spacer on Far Right for Balance -->
-    <div class="hidden sm:block w-12 flex-shrink-0"></div>
   </div>
 </header>

@@ -1,128 +1,53 @@
 ---
-import ThemeToggle from '../components/ThemeToggle.vue';
-import { ClientRouter } from 'astro:transitions';
-import '../styles/global.css';
+import BaseLayout from '../layouts/BaseLayout.astro';
 
-const navLinks = [
-  { label: '博客 (Blog)', href: '/blog' },
-  { label: '填词 (Poetry)', href: '/poetry' },
-  { label: '相册 (Gallery)', href: '/images' },
-  { label: '归档 (Archives)', href: '/archives' },
-  { label: '工作台 (Studio)', href: 'https://bookswich.yukinova.top', external: true },
-  { label: 'GitHub', href: 'https://github.com/Yuki-Nova', external: true },
+// 门户入口。首页不再自带独立 HTML 骨架，统一走 BaseLayout（顶部导航 + 页脚）。
+const entries = [
+  { label: '博客文集', desc: '诗词与随笔存稿', href: '/blog' },
+  { label: '填词案头', desc: '153 词牌 · 平仄校验', href: '/poetry' },
+  { label: '极简影廊', desc: '影像策展空间', href: '/images' },
+  { label: '文集编年', desc: '按年岁检索全稿', href: '/archives' },
+  { label: '学术工作台', desc: '教材解析 · 独立站点', href: 'https://bookswich.yukinova.top', external: true },
+  { label: 'GitHub', desc: '源码与项目', href: 'https://github.com/Yuki-Nova', external: true },
 ];
-
-const currentYear = new Date().getFullYear();
 ---
 
-<!doctype html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Yuki-Nova · 个人名片</title>
-    <meta name="description" content="Yuki-Nova 的个人数字空间与文墨书斋" />
-
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-
-    <!-- Astro View Transitions -->
-    <ClientRouter />
-
-    <!-- Early FOUC Prevention Script -->
-    <script is:inline>
-      (function () {
-        try {
-          var t = localStorage.getItem('shiro-theme');
-          if (!t) {
-            t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          }
-          if (t === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-          } else {
-            document.documentElement.removeAttribute('data-theme');
-          }
-        } catch (e) {}
-      })();
-    </script>
-  </head>
-  <body class="bg-canvas text-ink antialiased min-h-screen flex flex-col justify-between font-sans relative overflow-x-hidden selection:bg-seal-soft selection:text-seal">
-    <!-- Subtle Geometric / Constellation Background Overlay (Image 3 Style) -->
-    <div class="fixed inset-0 pointer-events-none opacity-[0.035] dark:opacity-[0.05] z-0">
-      <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="grid-pattern" width="80" height="80" patternUnits="userSpaceOnUse">
-            <path d="M 80 0 L 0 80 M 0 0 L 80 80" fill="none" stroke="currentColor" stroke-width="0.8" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grid-pattern)" />
-      </svg>
+<BaseLayout title="Yuki-Nova · 个人名片" description="Yuki-Nova 的个人数字空间与文墨书斋">
+  <div class="flex flex-col items-center text-center py-6 sm:py-14 animate-fade-in">
+    <!-- 圆头像 -->
+    <div class="relative mb-5 group">
+      <img
+        src="https://github.com/Yuki-Nova.png"
+        alt="Yuki-Nova"
+        class="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-2 border-border-paper shadow-paper transition-transform duration-500 group-hover:scale-105"
+        loading="eager"
+      />
     </div>
 
-    <!-- Top Corner Quick Bar -->
-    <header class="w-full max-w-5xl mx-auto px-6 py-4 flex items-center justify-between z-10">
-      <span class="text-xs font-mono text-ink-muted/60 tracking-wider">yukinova.top</span>
-      <ThemeToggle client:load />
-    </header>
+    <!-- 名号与自述 -->
+    <h1 class="text-3xl sm:text-4xl font-serif font-bold text-ink tracking-widest mb-2">
+      Yuki-Nova
+    </h1>
+    <p class="text-xs sm:text-sm font-sans text-ink-muted tracking-wider mb-10">
+      Software Developer · Classical Poet · Photography Enthusiast
+    </p>
 
-    <!-- Center Card: Minimalist Personal Business Card (Image 3 Style) -->
-    <main class="flex-1 flex flex-col items-center justify-center px-4 py-12 z-10 text-center">
-      <div class="max-w-md w-full flex flex-col items-center animate-fade-in">
-        <!-- Round Avatar from GitHub with soft glow -->
-        <div class="relative mb-5 group">
-          <img
-            src="https://github.com/Yuki-Nova.png"
-            alt="Yuki-Nova"
-            class="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-2 border-border-paper shadow-xl transition-transform duration-500 group-hover:scale-105"
-            loading="eager"
-          />
-          <div class="absolute inset-0 rounded-full ring-1 ring-black/5 dark:ring-white/10 pointer-events-none"></div>
-        </div>
-
-        <!-- Name (Elegant handwritten / serif aesthetic) -->
-        <h1 class="text-3xl sm:text-4xl font-serif font-bold text-ink tracking-wide mb-2">
-          Yuki-Nova
-        </h1>
-
-        <!-- Subtitle / Bio (Image 3 Style) -->
-        <p class="text-xs sm:text-sm font-sans text-ink-muted tracking-wide mb-8">
-          Software Developer · Classical Poet · Photography Enthusiast
-        </p>
-
-        <!-- Horizontal Nav Links (Image 3 Style) -->
-        <nav class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2.5 text-xs sm:text-sm font-serif">
-          {navLinks.map((link) => (
-            <a
-              href={link.href}
-              target={link.external ? '_blank' : undefined}
-              rel={link.external ? 'noopener noreferrer' : undefined}
-              class="text-seal hover:underline hover:opacity-80 transition-opacity font-medium no-underline"
-            >
-              {link.label}
-            </a>
-          ))}
-        </nav>
-      </div>
-    </main>
-
-    <!-- Minimalist Footer (Image 3 Style) -->
-    <footer class="w-full text-center py-6 px-4 z-10 text-xs font-sans text-ink-muted/70 space-y-1.5">
-      <div class="flex items-center justify-center gap-3 text-[11px]">
-        <a href="/blog" class="hover:text-ink transition-colors no-underline">Blog</a>
-        <span>·</span>
-        <a href="https://github.com/Yuki-Nova" target="_blank" rel="noopener" class="hover:text-ink transition-colors no-underline">GitHub</a>
-        <span>·</span>
-        <a href="https://bookswich.yukinova.top" target="_blank" rel="noopener" class="hover:text-ink transition-colors no-underline">Studio</a>
-      </div>
-      <p class="text-[10px] font-mono">
-        Copyright © 2017–{currentYear} Yuki-Nova · Powered by Astro
-      </p>
-    </footer>
-  </body>
-</html>
+    <!-- 门户入口卡片 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full max-w-3xl text-left">
+      {entries.map((entry) => (
+        <a
+          href={entry.href}
+          target={entry.external ? '_blank' : undefined}
+          rel={entry.external ? 'noopener noreferrer' : undefined}
+          class="paper-card p-4 sm:p-5 no-underline group"
+        >
+          <div class="font-serif font-semibold text-sm text-ink group-hover:text-seal transition-colors flex items-center justify-between gap-2">
+            <span>{entry.label}</span>
+            <span class="text-ink-faint group-hover:text-seal group-hover:translate-x-0.5 transition-all text-xs">→</span>
+          </div>
+          <p class="text-[11px] font-serif text-ink-muted mt-1">{entry.desc}</p>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
