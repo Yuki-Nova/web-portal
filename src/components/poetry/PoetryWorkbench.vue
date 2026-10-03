@@ -121,7 +121,17 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick, onMounted, watch } from 'vue';
+/**
+ * 填词案头容器。
+ *
+ * 与引擎的接口约定（勿凭印象改，以 composables 实际签名为准）：
+ *   useCipai()                          → { list }                       （无参）
+ *   usePattern(cipaiListRef)            → { selectedId, currentPattern, groupedPatterns, selectPattern }（位置参数）
+ *   useAnalysis(text, pattern, override)→ { analyzing, matchResults, stats, errors,
+ *                                           multiToneList, rhymeResult, effectiveRhymeBook, setToneOverride }（位置参数）
+ *   useDraft({ text, patternId, rhymeBook }) → { load, clear, hasDraft, restored, savedAt }（对象参数，内部自动落盘）
+ */
+import { ref, computed, onMounted } from 'vue';
 import PatternSelector from './PatternSelector.vue';
 import PatternPreview from './PatternPreview.vue';
 import PoetryIDE from './PoetryIDE.vue';
@@ -144,7 +154,7 @@ const ideRef = ref(null);
 const panelOpen = ref(true);
 const formatIndex = ref(0);
 
-// Data
+// 词牌数据与当前格律模板
 const { list: cipaiList } = useCipai();
 const {
   selectedId,
@@ -153,9 +163,13 @@ const {
   selectPattern: selectPatternById,
 } = usePattern(cipaiList);
 
-const rhymeBook = ref('cilin');
+// 用户手动指定的韵书；空串表示交给引擎按体裁自动推导（诗体→新韵，词牌→词林正韵）
+const rhymeBook = ref('');
 
-// Active format pattern
+// 编辑器输入
+const inputText = ref('');
+
+// 当前格式变体（词牌可含多体）
 const activePattern = computed(() => {
   if (!currentPattern.value) return null;
   const formats = currentPattern.value.formats;
@@ -168,35 +182,7 @@ const activePattern = computed(() => {
   return currentPattern.value;
 });
 
-const effectiveRhymeBook = computed(() => {
-  if (currentPattern.value?.source === 'builtin') {
-    return rhymeBook.value;
-  }
-  return rhymeBook.value || 'cilin';
-});
-
-// Editor Input Text
-const inputText = ref('');
-
-// Auto Draft management
-const {
-  draftRestored,
-  saveDraft,
-  clearDraft: clearStoredDraft,
-  loadDraft,
-} = useDraft(selectedId);
-
-const selectPattern = (pattern) => {
-  selectPatternById(pattern.id);
-  formatIndex.value = 0;
-};
-
-const clearDraft = () => {
-  inputText.value = '';
-  clearStoredDraft();
-};
-
-// Analysis engine
+// 分析引擎：位置参数签名 useAnalysis(text, pattern, rhymeBookOverride)
 const {
   analyzing,
   matchResults,
@@ -204,36 +190,52 @@ const {
   errors,
   multiToneList,
   rhymeResult,
-  updateMultiToneOverride,
-} = useAnalysis({
+  effectiveRhymeBook,
+  setToneOverride,
+} = useAnalysis(inputText, activePattern, rhymeBook);
+
+// 草稿：对象参数签名；内部已 watch text/patternId/rhymeBook 自动保存，无需外部 saveDraft
+const { load: loadDraft, clear: clearStoredDraft } = useDraft({
   text: inputText,
-  pattern: activePattern,
-  rhymeBook: effectiveRhymeBook,
+  patternId: selectedId,
+  rhymeBook,
 });
 
-// Jump from preview or error list
-const onPreviewJump = (lineIndex) => {
-  ideRef.value?.focusLine?.(lineIndex);
+const draftRestored = ref(false);
+
+// PatternSelector 的 select 事件抛的是词牌 id 字符串（不是对象）
+const selectPattern = (id) => {
+  selectPatternById(id);
+  formatIndex.value = 0;
 };
 
-const onJumpToError = (err) => {
-  ideRef.value?.focusChar?.(err.charIndex);
+const clearDraft = () => {
+  inputText.value = '';
+  clearStoredDraft();
+  draftRestored.value = false;
 };
 
-const onCharClick = (data) => {};
+// 谱面/错误列表跳转：两者都回调 (line, col)，落到编辑器暴露的 jumpTo
+const onPreviewJump = (line, col) => {
+  ideRef.value?.jumpTo?.(line, col ?? 0);
+};
 
-const onCandidateSelect = ({ charIndex, candidate }) => {
-  updateMultiToneOverride(charIndex, candidate);
+const onJumpToError = (line, col) => {
+  ideRef.value?.jumpTo?.(line, col ?? 0);
+};
+
+const onCharClick = () => {};
+
+// 多音字候选：EditorTooltip 抛 { line, col, char, candidate }
+const onCandidateSelect = ({ line, col, char, candidate }) => {
+  if (candidate?.tone) setToneOverride(line, col, char, candidate.tone);
 };
 
 onMounted(() => {
   const saved = loadDraft();
-  if (saved) {
-    inputText.value = saved;
+  if (saved?.text) {
+    inputText.value = saved.text;
+    draftRestored.value = true;
   }
-});
-
-watch(inputText, (newVal) => {
-  saveDraft(newVal);
 });
 </script>
