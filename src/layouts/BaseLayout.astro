@@ -1,0 +1,77 @@
+---
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { ClientRouter } from 'astro:transitions';
+import { getCollection } from 'astro:content';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "yuki's stop · 纸墨书斋",
+  description = "古典诗词、影像策展与学术工具的数字空间",
+} = Astro.props;
+
+const currentPath = Astro.url.pathname;
+
+// Load posts for global full-text search
+const allBlogPosts = await getCollection('blog');
+const searchPosts = allBlogPosts.map((p) => ({
+  slug: p.id.replace(/\.md$/, ''),
+  title: p.data.title,
+  date: p.data.date ? new Date(p.data.date).toLocaleDateString('zh-CN') : '',
+  categories: p.data.categories || [],
+  tags: p.data.tags || [],
+  body: p.body || '',
+}));
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    <!-- Google Fonts: Noto Serif SC & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Astro View Transitions for seamless app-like navigation -->
+    <ClientRouter />
+
+    <!-- Early FOUC Prevention Script -->
+    <script is:inline>
+      (function () {
+        try {
+          var t = localStorage.getItem('shiro-theme');
+          if (!t) {
+            t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          if (t === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else {
+            document.documentElement.removeAttribute('data-theme');
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body class="bg-canvas text-ink antialiased min-h-screen flex flex-col font-sans transition-colors duration-200">
+    <Header currentPath={currentPath} searchPosts={searchPosts} />
+    <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

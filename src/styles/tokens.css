@@ -1,0 +1,69 @@
+/* src/styles/tokens.css - 纸墨·新文人设计系统核心令牌 */
+:root {
+  /* Day / Light (日光宣纸) */
+  --color-canvas: #f9f8f5;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+  --color-ink: #1f2124;
+  --color-ink-muted: #5c6370;
+  --color-ink-faint: #9ca3af;
+  --color-border: rgba(31, 33, 36, 0.07);
+  --color-border-subtle: rgba(31, 33, 36, 0.04);
+  
+  /* Seal / 朱砂印 */
+  --color-seal: #a61b29;
+  --color-seal-soft: rgba(166, 27, 41, 0.08);
+  --color-seal-border: rgba(166, 27, 41, 0.25);
+
+  /* Academic Amber / 麦穗流金 */
+  --color-amber: #c68a36;
+  --color-amber-soft: rgba(198, 138, 54, 0.1);
+
+  /* Tone metrics for poetry / 平仄墨阶与朱批 */
+  --tone-ping: var(--color-ink);
+  --tone-ze: var(--color-ink-muted);
+  --tone-ke: var(--color-ink-faint);
+  --tone-rhyme-bg: rgba(166, 27, 41, 0.08);
+  --tone-rhyme-text: #a61b29;
+
+  /* Paper texture & shadow */
+  --shadow-paper: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.05);
+  --shadow-paper-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 20px 40px -4px rgba(0, 0, 0, 0.08);
+
+  /* Fonts */
+  --font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, serif;
+  --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+:root[data-theme="dark"] {
+  /* Night / Dark (玄墨沉夜) */
+  --color-canvas: #121417;
+  --color-surface: #181b1f;
+  --color-surface-elevated: #20242a;
+  --color-ink: #e2dfd7;
+  --color-ink-muted: #8e95a2;
+  --color-ink-faint: #575d69;
+  --color-border: rgba(226, 223, 215, 0.08);
+  --color-border-subtle: rgba(226, 223, 215, 0.04);
+
+  /* Seal in Dark mode */
+  --color-seal: #e05256;
+  --color-seal-soft: rgba(224, 82, 86, 0.12);
+  --color-seal-border: rgba(224, 82, 86, 0.3);
+
+  /* Amber in Dark mode */
+  --color-amber: #d4a359;
+  --color-amber-soft: rgba(212, 163, 89, 0.12);
+
+  /* Tone metrics in dark */
+  --tone-ping: var(--color-ink);
+  --tone-ze: var(--color-ink-muted);
+  --tone-ke: var(--color-ink-faint);
+  --tone-rhyme-bg: rgba(224, 82, 86, 0.15);
+  --tone-rhyme-text: #e05256;
+
+  /* Paper shadow in dark */
+  --shadow-paper: 0 1px 3px rgba(0, 0, 0, 0.3), 0 16px 40px rgba(0, 0, 0, 0.4);
+  --shadow-paper-hover: 0 4px 8px rgba(0, 0, 0, 0.4), 0 24px 48px rgba(0, 0, 0, 0.5);
+}

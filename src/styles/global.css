@@ -1,0 +1,57 @@
+@import './tokens.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+  }
+
+  ::selection {
+    background-color: var(--color-seal-soft);
+    color: var(--color-seal);
+  }
+}
+
+/* 宣纸卡片容器 */
+.paper-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-paper);
+  border-radius: 8px;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.25s ease;
+}
+
+.paper-card:hover {
+  box-shadow: var(--shadow-paper-hover);
+  border-color: rgba(166, 27, 41, 0.18);
+}
+
+/* 朱砂印印章徽标 */
+.seal-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-seal-border);
+  background-color: var(--color-seal-soft);
+  color: var(--color-seal);
+  font-family: var(--font-serif);
+  font-weight: 600;
+  border-radius: 4px;
+}

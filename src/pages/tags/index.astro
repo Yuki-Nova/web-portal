@@ -1,0 +1,125 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const allPosts = await getCollection('blog');
+
+// Group posts by tag
+const tagMap: Record<string, typeof allPosts> = {};
+
+allPosts.forEach((post) => {
+  const tags = post.data.tags && post.data.tags.length > 0
+    ? post.data.tags
+    : ['未标记'];
+
+  tags.forEach((tag) => {
+    if (!tagMap[tag]) tagMap[tag] = [];
+    tagMap[tag].push(post);
+  });
+});
+
+// Sort each tag by date descending
+Object.keys(tagMap).forEach((tag) => {
+  tagMap[tag].sort((a, b) => {
+    const da = a.data.date ? new Date(a.data.date).getTime() : 0;
+    const db = b.data.date ? new Date(b.data.date).getTime() : 0;
+    return db - da;
+  });
+});
+
+const sortedTags = Object.keys(tagMap).sort(
+  (a, b) => tagMap[b].length - tagMap[a].length
+);
+
+const formatDate = (d?: string | Date) => {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+};
+---
+
+<BaseLayout title="标签 · yuki's stop" description="按韵调声律、律绝形制汇编之诗词标签">
+  <div class="py-4 sm:py-6 max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-border-paper pb-6 mb-8">
+      <div>
+        <div class="inline-flex items-center gap-2 text-xs font-serif text-seal mb-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-seal"></span>
+          <span>标签索引</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-serif font-bold text-ink">
+          律绝形制与意象标签
+        </h1>
+      </div>
+      <div class="text-xs text-ink-muted font-mono">
+        共 {sortedTags.length} 个标签 · {allPosts.length} 篇文卷
+      </div>
+    </div>
+
+    <!-- Tag Cloud -->
+    <div class="flex flex-wrap gap-2.5 mb-10">
+      {sortedTags.map((tag) => (
+        <a
+          href={`#tag-${encodeURIComponent(tag)}`}
+          class="paper-card px-3.5 py-1.5 text-xs font-serif text-ink hover:text-seal hover:border-seal/40 transition-colors flex items-center gap-2 no-underline"
+        >
+          <span class="text-seal text-[10px]">#</span>
+          <span>{tag}</span>
+          <span class="text-[10px] font-mono text-ink-muted bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded">
+            {tagMap[tag].length}
+          </span>
+        </a>
+      ))}
+    </div>
+
+    <!-- Tag Sections -->
+    <div class="space-y-12">
+      {sortedTags.map((tag) => (
+        <section id={`tag-${encodeURIComponent(tag)}`} class="paper-card p-6 sm:p-8">
+          <div class="flex items-center justify-between border-b border-border-paper pb-4 mb-6">
+            <h2 class="text-lg sm:text-xl font-serif font-bold text-ink flex items-center gap-2.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-seal"></span>
+              <span>#{tag}</span>
+            </h2>
+            <span class="text-xs font-mono text-ink-muted">
+              {tagMap[tag].length} 篇
+            </span>
+          </div>
+
+          <div class="divide-y divide-border-paper/60">
+            {tagMap[tag].map((post) => {
+              const slug = post.id.replace(/\.md$/, '');
+              return (
+                <article class="py-3 flex items-center justify-between gap-4 group">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <span class="text-xs font-mono text-ink-faint w-20 flex-shrink-0">
+                      {formatDate(post.data.date)}
+                    </span>
+                    <a
+                      href={`/posts/${encodeURIComponent(slug)}`}
+                      class="font-serif text-sm sm:text-base text-ink group-hover:text-seal transition-colors truncate no-underline"
+                    >
+                      {post.data.title}
+                    </a>
+                  </div>
+
+                  <div class="flex items-center gap-2 flex-shrink-0 text-xs text-ink-muted">
+                    {post.data.categories?.map((cat) => (
+                      <span class="text-[10px] font-serif text-ink-muted px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5">
+                        {cat}
+                      </span>
+                    ))}
+                    <span class="group-hover:translate-x-1 transition-transform">→</span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
