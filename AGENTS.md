@@ -38,7 +38,9 @@ xxx: 'rgb(var(--color-xxx-rgb) / <alpha-value>)',
 
 ### 3. 生成型数据不要手改
 
-`src/data/gallery.json` 由 `scripts/extract-gallery.js` 从旧相册静态快照抽取（读 `../my-oss-gallery/docs/index.html` + `categories.json`）。相册内容有变动时重跑脚本，不要手编 JSON。
+`public/gallery.json` 由 `scripts/extract-gallery.js` 从旧相册静态快照抽取（读 `../my-oss-gallery/docs/index.html` + `categories.json`）。相册内容有变动时重跑 `node scripts/extract-gallery.js`，不要手编 JSON。
+
+> `src/data/gallery.json` 是迁移期的历史副本，已不被任何页面引用；确认无用后可删除（**删除前先与用户确认**）。
 
 ## 三、已定位的坑点
 
@@ -65,9 +67,17 @@ xxx: 'rgb(var(--color-xxx-rgb) / <alpha-value>)',
   **不要**把弹窗挪回 Header，也**不要**再加回 `<Teleport>`。若将来确需 Teleport，先跑上表的隔离实验确认。
 - **回归要点**：`agent-browser eval 'Array.from(document.body.children).map(e=>e.tagName).join(",")'` 应为 `HEADER,MAIN,FOOTER,SCRIPT,ASTRO-ISLAND`；`document.querySelectorAll("astro-island").length` 应为 4；`agent-browser errors` 应为空；点击 Header 第二个按钮后 `input[placeholder]` 存在且输入关键词能出结果。
 
-### 2. 全站文章正文被内联进每一页
+### 2. 大块数据不要内联进岛的 props（**已修**，2026-10-03）
 
-`BaseLayout` 把 80 篇文章的 `body` 作为 props 传给挂在页尾的 `SearchModal`，导致其 `astro-island` 标签长达 26KB（props 属性），87 个 HTML 合计 5.1MB，文章详情页 43KB、`/blog` 153KB、`/images` 259KB（相册 353 张图的 JSON 也内联）。优化方向是改静态索引按需加载。
+原先 `BaseLayout` 把 80 篇文章正文当 props 传给 `SearchModal`（该岛标签 26KB），相册又把 353 张图的 JSON 当 props 传给 `GalleryView`（`/images` 页 259KB），87 页 HTML 合计 5.1MB。现已全部改为按需加载：
+
+| 数据 | 运行时来源 | 体积（gzip） |
+|---|---|---|
+| 检索索引 | `/search-index.json`，由 `src/pages/search-index.json.js` 构建期生成；打开搜索时 fetch，会话内缓存 | 11 KB |
+| 相册快照 | `/gallery.json`，由 `scripts/extract-gallery.js` 生成到 `public/`；进相册页时 fetch | 9.8 KB |
+| 词牌数据 | `/cipai.json`（既有） | 约 200 KB |
+
+**新增大块数据时照此办理**：放 `public/` 或做构建期端点，由客户端按需取，不要塞进组件 props。当前 87 页 HTML 原始 1.7MB、gzip 567KB（平均每页 6.5KB）。
 
 ### 3. 相册接口是「可选后端」
 
