@@ -3,23 +3,47 @@ const currentYear = new Date().getFullYear();
 ---
 
 <footer class="mt-auto border-t border-border-paper bg-canvas transition-colors duration-200 py-10">
-  <div class="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-serif text-ink-muted">
-    <!-- Quote & Philosophy -->
-    <div class="flex items-center gap-2">
-      <span class="w-1.5 h-1.5 rounded-full bg-seal/60"></span>
-      <p class="tracking-widest">
-        「疏影横斜水清浅，暗香浮动月黄昏」
-      </p>
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 space-y-4">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-serif text-ink-muted">
+      <!-- Quote & Philosophy -->
+      <div class="flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-seal/60"></span>
+        <p class="tracking-widest">
+          「疏影横斜水清浅，暗香浮动月黄昏」
+        </p>
+      </div>
+
+      <!-- Copyright & Links -->
+      <div class="flex items-center gap-3 text-ink-muted font-sans text-[11px]">
+        <span>© {currentYear} Yuki-Nova</span>
+        <span class="opacity-40">·</span>
+        <span>Paper &amp; Ink System</span>
+        <span class="opacity-40">·</span>
+        <a href="https://github.com/Yuki-Nova" target="_blank" rel="noopener noreferrer" class="hover:text-ink transition-colors">
+          GitHub
+        </a>
+      </div>
     </div>
 
-    <!-- Copyright & Links -->
-    <div class="flex items-center gap-3 text-ink-muted font-sans text-[11px]">
-      <span>© {currentYear} Yuki-Nova</span>
+    <!-- 备案信息（中国大陆站点合规项，与旧站 footer 保持一致） -->
+    <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10px] font-sans text-ink-faint">
+      <a
+        href="https://beian.miit.gov.cn/"
+        target="_blank"
+        rel="noreferrer"
+        class="hover:text-ink transition-colors no-underline"
+      >
+        豫ICP备2026021381号-1
+      </a>
       <span class="opacity-40">·</span>
-      <span>Paper & Ink System</span>
-      <span class="opacity-40">·</span>
-      <a href="https://github.com/Yuki-Nova" target="_blank" rel="noopener noreferrer" class="hover:text-ink transition-colors">
-        GitHub
+      <a
+        href="https://beian.mps.gov.cn/#/query/webSearch?code=41090002411116"
+        target="_blank"
+        rel="noreferrer"
+        class="inline-flex items-center gap-1 hover:text-ink transition-colors no-underline"
+      >
+        <img src="/beian.png" alt="公安备案" class="w-3.5 h-3.5" />
+        <span>豫公网安备41090002411116号</span>
       </a>
     </div>
   </div>
