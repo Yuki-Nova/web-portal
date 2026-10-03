@@ -55,6 +55,23 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 导航项集中在 `Header.astro` 的 `navItems`（纯文字，**不要加 emoji 图标**），当前页由 `aria-current="page"` 标记、以印章红下划线高亮。
 
+### 5. 列表页一律构建期分页，分类/标签走「索引 + 详情」
+
+单页塞下全部文章曾让归档/分类/标签页各占 65 KB。现行结构（与旧站 Hexo 对齐，每页 20 篇）：
+
+| 路由 | 文件 | 说明 |
+|---|---|---|
+| `/archives`、`/archives/2` … | `src/pages/archives/[...page].astro` | Astro `paginate()`，页内仍按年分组 |
+| `/categories` | `src/pages/categories/index.astro` | **只列分类卡片与篇数** |
+| `/categories/<分类>/`、`/2` … | `src/pages/categories/[cat]/[...page].astro` | 该分类的文章列表 + 分页 |
+| `/tags`、`/tags/<标签>/` … | 同构于 categories | — |
+
+分页 UI 统一用 `src/components/Pagination.astro`。**新增列表页照此办理**，不要退回"一页列全部"。
+
+两处易忘的配套项：
+- `src/pages/404.astro` 生成 `dist/404.html`，部署时 Nginx 需配 `error_page 404 /404.html;` 才生效。
+- `Footer.astro` 内的 ICP/公安备案号是**合规项**，重写页脚时不要删；图标在 `public/beian.png`。
+
 ## 三、已定位的坑点
 
 ### 1. `<Teleport to="body">` 会删掉整个 `<header>`（**已修复**，2026-10-03）
@@ -90,7 +107,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 | 相册快照 | `/gallery.json`，由 `scripts/extract-gallery.js` 生成到 `public/`；进相册页时 fetch | 9.8 KB |
 | 词牌数据 | `/cipai.json`（既有） | 约 200 KB |
 
-**新增大块数据时照此办理**：放 `public/` 或做构建期端点，由客户端按需取，不要塞进组件 props。当前 87 页 HTML 原始 1.7MB、gzip 567KB（平均每页 6.5KB）。
+**新增大块数据时照此办理**：放 `public/` 或做构建期端点，由客户端按需取，不要塞进组件 props。分页重构后当前为 105 页、HTML 原始合计 1,669 KB（重构前 87 页 5,118 KB）。
 
 ### 3. 相册接口是「可选后端」
 
@@ -119,7 +136,7 @@ Astro 岛内使用 Vue 的 `<Teleport>` 会在 hydration 时破坏宿主 DOM（�
 
 ## 四、改动后的验证流程
 
-1. `npm run build`（必须 87 页全绿）。
+1. `npm run build`（必须 105 页全绿）。
 2. 检查产物里的令牌与透明度类是否真的生成（源码通过不代表 CSS 通过）：
 
    ```powershell

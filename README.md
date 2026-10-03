@@ -10,10 +10,12 @@
 |---|---|---|
 | `/` | 个人名片 + 门户入口卡片（走 BaseLayout 统一骨架） | 静态 |
 | `/poems` | 诗词墙（纯诗词页，无存稿列表与个人信息卡） | `src/data/poetry-wall.json` |
-| `/posts/[slug]` | 文章详情页（居中单栏、朱砂钤印） | `src/content/blog/*.md` |
-| `/archives` `/categories` `/tags` | 编年表 / 分类 / 标签索引 | content collection |
-| `/images` | 影廊（353 张，纯静态快照 + 可选 OSS 实时同步） | `src/data/gallery.json` |
+| `/posts/[slug]` | 文章详情页（居中单栏、上下篇导航、朱砂钤印） | `src/content/blog/*.md` |
+| `/archives` | 文集编年（每页 20 篇，构建期分页） | content collection |
+| `/categories` `/tags` | 分类 / 标签索引卡片；详情页 `/categories/<分类>/`、`/tags/<标签>/` 各自分页 | content collection |
+| `/images` | 影廊（353 张，纯静态快照 + 可选 OSS 实时同步） | `public/gallery.json` |
 | `/poetry` | 填词案头（153 词牌、平仄引擎、韵书校验） | `public/cipai.json` + `src/poetry-engine/` |
+| `/404` | 未寻得页（部署时 Nginx 需配 `error_page 404 /404.html;` 才生效） | 静态 |
 
 `bookswich.yukinova.top` 是**外链**，不在本工程内，代码不合并。
 
