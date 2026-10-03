@@ -49,20 +49,33 @@ const currentPath = Astro.url.pathname;
     <!-- Astro View Transitions for seamless app-like navigation -->
     <ClientRouter />
 
-    <!-- Early FOUC Prevention Script -->
+    <!-- 主题应用：首次加载防 FOUC + 客户端导航后重新应用。
+         View Transitions 的 swap 会用新页面的 <html> 属性覆盖当前文档，而 SSR 输出的
+         <html> 不带 data-theme，属性被抹掉 → 换页时闪一下昼模式（localStorage 里其实
+         还记着夜模式，所以刷新又恢复）。故监听 astro:after-swap 把主题补回来。 -->
     <script is:inline>
       (function () {
-        try {
-          var t = localStorage.getItem('shiro-theme');
-          if (!t) {
-            t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          }
-          if (t === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-          } else {
-            document.documentElement.removeAttribute('data-theme');
-          }
-        } catch (e) {}
+        function applyTheme() {
+          try {
+            var t = localStorage.getItem('shiro-theme');
+            if (!t) {
+              t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            if (t === 'dark') {
+              document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+              document.documentElement.removeAttribute('data-theme');
+            }
+          } catch (e) {}
+        }
+
+        applyTheme();
+
+        // 内联脚本在每次客户端导航时可能被重新执行，用标志位避免重复注册监听
+        if (!window.__shiroThemeWatcher) {
+          window.__shiroThemeWatcher = true;
+          document.addEventListener('astro:after-swap', applyTheme);
+        }
       })();
     </script>
   </head>

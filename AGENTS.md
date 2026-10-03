@@ -134,6 +134,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 Astro 岛内使用 Vue 的 `<Teleport>` 会在 hydration 时破坏宿主 DOM（详见坑点一，已在 `SearchModal` / `EditorTooltip` / `GalleryView` 三处踩过）。弹窗一律就地 `fixed` 定位（确认祖先没有 transform / filter / backdrop-filter），或作为独立岛挂到 `BaseLayout` 的 body 末尾。
 
+### 6. View Transitions 会抹掉 `<html>` 上的 `data-theme`（**已修**，2026-10-03）
+
+- **现象**：在任一子页切到夜模式后，点导航跳到别的页面会先闪成昼模式，刷新才恢复。
+- **根因**：`ClientRouter` 的 swap 用新页面的 `<html>` 属性覆盖当前文档，而 SSR 输出的 `<html lang="zh-CN">` 不带 `data-theme`，属性被移除；`localStorage['shiro-theme']` 其实还记着夜模式，所以刷新又对了。
+- **实测证据**（修复前）：整页加载 `data-theme=dark` / body `rgb(18,20,23)`；客户端导航后 `data-theme=null` / body `rgb(249,248,245)`。
+- **修复**：`BaseLayout.astro` 把主题应用抽成 `applyTheme()`，除首次执行外再监听 `astro:after-swap` 重新应用（用 `window.__shiroThemeWatcher` 标志位防止内联脚本被重复执行时重复注册）；`ThemeToggle.vue` 的状态读取改为 `localStorage` 优先，不再依赖当时可能尚未补回的 DOM 属性。
+- **回归要点**：设为夜模式 → 连点导航切两次页面 → `document.documentElement.getAttribute("data-theme")` 应始终为 `"dark"`、body 背景为 `rgb(18, 20, 23)`；切到昼模式后导航应保持 `null` / `rgb(249, 248, 245)`。
+
 ## 四、改动后的验证流程
 
 1. `npm run build`（必须 105 页全绿）。

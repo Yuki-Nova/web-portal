@@ -60,8 +60,16 @@ const toggleTheme = () => {
 };
 
 onMounted(() => {
-  // Sync with initial theme set by inline FOUC guard in <head>
-  const current = document.documentElement.getAttribute('data-theme');
-  isDark.value = current === 'dark';
+  // 与 <head> 里的主题脚本保持同一判断口径：显式存储优先，其次跟随系统。
+  // 不直接读 documentElement 的属性——客户端导航后该属性由 astro:after-swap
+  // 补回，读取时机可能早于它，会造成图标状态与实际主题错位。
+  try {
+    const stored = localStorage.getItem('shiro-theme');
+    isDark.value = stored
+      ? stored === 'dark'
+      : window.matchMedia('(prefers-color-scheme: dark)').matches;
+  } catch (e) {
+    isDark.value = document.documentElement.getAttribute('data-theme') === 'dark';
+  }
 });
 </script>
