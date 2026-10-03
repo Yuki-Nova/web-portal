@@ -60,7 +60,7 @@ const formatDate = (d?: string | Date) => {
             <span class="text-xs font-mono text-ink-muted">共 {allPosts.length} 篇</span>
           </div>
 
-          <div class="divide-y divide-border-paper/60">
+          <div class="divide-y divide-border-paper">
             {allPosts.map((post) => {
               const slug = post.id.replace(/\.md$/, '');
               return (

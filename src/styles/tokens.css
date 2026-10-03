@@ -1,6 +1,14 @@
-/* src/styles/tokens.css - 纸墨·新文人设计系统核心令牌 */
+/* src/styles/tokens.css - 纸墨·新文人设计系统核心令牌
+ *
+ * 命名约定：
+ *   --color-x      供 CSS 直接引用的颜色值
+ *   --color-x-rgb  RGB 通道三元组，仅供 Tailwind 的 rgb(var(--x-rgb) / <alpha-value>) 使用。
+ *                  Tailwind 3 无法对 var() 形式的颜色计算透明度（bg-seal/5 会静默不生成），
+ *                  凡需要 /5、/15 这类修饰符的颜色，必须额外提供通道变量。
+ */
+
 :root {
-  /* Day / Light (日光宣纸) */
+  /* ── 基础色：日光宣纸态 ── */
   --color-canvas: #f9f8f5;
   --color-surface: #ffffff;
   --color-surface-elevated: #ffffff;
@@ -9,35 +17,58 @@
   --color-ink-faint: #9ca3af;
   --color-border: rgba(31, 33, 36, 0.07);
   --color-border-subtle: rgba(31, 33, 36, 0.04);
-  
-  /* Seal / 朱砂印 */
+
+  /* ── 通道变量（Tailwind 透明度修饰符专用）── */
+  --color-canvas-rgb: 249 248 245;
+  --color-surface-rgb: 255 255 255;
+  --color-surface-elevated-rgb: 255 255 255;
+  --color-ink-rgb: 31 33 36;
+  --color-ink-muted-rgb: 92 99 112;
+  --color-ink-faint-rgb: 156 163 175;
+
+  /* ── 朱砂印（全站唯一品牌灵魂色）── */
   --color-seal: #a61b29;
+  --color-seal-rgb: 166 27 41;
   --color-seal-soft: rgba(166, 27, 41, 0.08);
   --color-seal-border: rgba(166, 27, 41, 0.25);
 
-  /* Academic Amber / 麦穗流金 */
+  /* ── 麦穗流金（学术工作台专用）── */
   --color-amber: #c68a36;
+  --color-amber-rgb: 198 138 54;
   --color-amber-soft: rgba(198, 138, 54, 0.1);
 
-  /* Tone metrics for poetry / 平仄墨阶与朱批 */
+  /* ── 功能语义色：独立于品牌色，不随主题漂移 ── */
+  --color-success: #5b8c7e;
+  --color-warning: #b8954a;
+  --color-danger: #c04a3a;
+  --color-error-bg: #fdf0ee;
+  --color-error-text: #c04a3a;
+  --color-multi-bg: #f3eef8;
+  --color-multi-text: #7c6b8e;
+  --color-multi-border: #bfafd0;
+
+  /* ── 平仄墨阶与韵脚朱批 ── */
   --tone-ping: var(--color-ink);
   --tone-ze: var(--color-ink-muted);
   --tone-ke: var(--color-ink-faint);
-  --tone-rhyme-bg: rgba(166, 27, 41, 0.08);
-  --tone-rhyme-text: #a61b29;
+  --tone-rhyme-bg: var(--color-seal-soft);
+  --tone-rhyme-text: var(--color-seal);
+  --tone-ping-bg: rgb(var(--color-ink-rgb) / 0.06);
 
-  /* Paper texture & shadow */
+  /* ── 纸感阴影 ── */
   --shadow-paper: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.05);
   --shadow-paper-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 20px 40px -4px rgba(0, 0, 0, 0.08);
 
-  /* Fonts */
+  /* ── 字体 ── */
   --font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, serif;
   --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-poetry: "Cardo", "Noto Serif SC", "Source Han Serif SC", "Zen Old Mincho",
+    "Shippori Mincho", "SimSun", serif;
 }
 
 :root[data-theme="dark"] {
-  /* Night / Dark (玄墨沉夜) */
+  /* ── 基础色：玄墨沉夜态 ── */
   --color-canvas: #121417;
   --color-surface: #181b1f;
   --color-surface-elevated: #20242a;
@@ -47,23 +78,79 @@
   --color-border: rgba(226, 223, 215, 0.08);
   --color-border-subtle: rgba(226, 223, 215, 0.04);
 
-  /* Seal in Dark mode */
+  /* ── 通道变量 ── */
+  --color-canvas-rgb: 18 20 23;
+  --color-surface-rgb: 24 27 31;
+  --color-surface-elevated-rgb: 32 36 42;
+  --color-ink-rgb: 226 223 215;
+  --color-ink-muted-rgb: 142 149 162;
+  --color-ink-faint-rgb: 87 93 105;
+
+  /* ── 朱砂印 ── */
   --color-seal: #e05256;
+  --color-seal-rgb: 224 82 86;
   --color-seal-soft: rgba(224, 82, 86, 0.12);
   --color-seal-border: rgba(224, 82, 86, 0.3);
 
-  /* Amber in Dark mode */
+  /* ── 麦穗流金 ── */
   --color-amber: #d4a359;
+  --color-amber-rgb: 212 163 89;
   --color-amber-soft: rgba(212, 163, 89, 0.12);
 
-  /* Tone metrics in dark */
+  /* ── 功能语义色（暗色态提亮）── */
+  --color-success: #6fae9d;
+  --color-warning: #d3a75e;
+  --color-danger: #ef8f80;
+  --color-error-bg: rgba(192, 74, 58, 0.14);
+  --color-error-text: #ef8f80;
+  --color-multi-bg: rgba(167, 139, 250, 0.14);
+  --color-multi-text: #b5a5e0;
+  --color-multi-border: #8f7fc0;
+
+  /* ── 平仄墨阶与韵脚朱批 ── */
   --tone-ping: var(--color-ink);
   --tone-ze: var(--color-ink-muted);
   --tone-ke: var(--color-ink-faint);
-  --tone-rhyme-bg: rgba(224, 82, 86, 0.15);
-  --tone-rhyme-text: #e05256;
+  --tone-rhyme-bg: var(--color-seal-soft);
+  --tone-rhyme-text: var(--color-seal);
+  --tone-ping-bg: rgb(var(--color-ink-rgb) / 0.1);
 
-  /* Paper shadow in dark */
+  /* ── 纸感阴影 ── */
   --shadow-paper: 0 1px 3px rgba(0, 0, 0, 0.3), 0 16px 40px rgba(0, 0, 0, 0.4);
   --shadow-paper-hover: 0 4px 8px rgba(0, 0, 0, 0.4), 0 24px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* ── 诗词工坊兼容层 ──
+ * src/components/poetry/ 下的组件由 poetry_tool 整体迁移而来，内部 scoped 样式仍按旧令牌名书写
+ * （--paper-card / --ink / --accent / --ping-bg 等 25 个）。此处做别名映射，无需逐个改写组件样式。
+ * 全部指向纸墨令牌，随 data-theme 自动联动。
+ */
+:root {
+  --ink: var(--color-ink);
+  --ink-light: var(--color-ink-muted);
+  --ink-muted: var(--color-ink-muted);
+  --paper: var(--color-surface);
+  --paper-card: var(--color-surface);
+  --paper-warm: var(--color-canvas);
+  --border: var(--color-border);
+  --border-light: var(--color-border-subtle);
+  --accent: var(--color-seal);
+  --accent-soft: var(--color-seal-soft);
+
+  /* 平仄 / 韵脚 / 多音 / 出韵语义色 */
+  --ping-bg: var(--tone-ping-bg);
+  --ping-text: var(--tone-ping);
+  --ze-text: var(--tone-ze);
+  --rhyme-bg: var(--tone-rhyme-bg);
+  --rhyme-border: var(--tone-rhyme-text);
+  --error-bg: var(--color-error-bg);
+  --error-text: var(--color-error-text);
+  --error-underline: var(--color-error-text);
+  --multi-bg: var(--color-multi-bg);
+  --multi-text: var(--color-multi-text);
+  --multi-border: var(--color-multi-border);
+
+  --success: var(--color-success);
+  --warning: var(--color-warning);
+  --danger: var(--color-danger);
 }

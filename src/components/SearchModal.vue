@@ -50,7 +50,7 @@
           </div>
 
           <!-- Search Results List -->
-          <div class="overflow-y-auto flex-1 divide-y divide-border-paper/60 p-2">
+          <div class="overflow-y-auto flex-1 divide-y divide-border-paper p-2">
             <div v-if="query.trim() === ''" class="py-8 text-center text-xs font-serif text-ink-muted">
               输入关键词（如：“临江仙”、“西风”、“七律”、“月”）检索全站诗作与文集
             </div>

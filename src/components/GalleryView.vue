@@ -23,7 +23,7 @@
       <!-- Right controls: Sync from OSS & Count -->
       <div class="flex items-center gap-3 self-end sm:self-auto">
         <button
-          @click="fetchLiveImages"
+          @click="fetchLiveImages()"
           :disabled="syncing"
           class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-serif text-ink-muted hover:text-seal border border-border-paper hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
           title="从阿里云 OSS 实时获取最新增减图片"
@@ -298,8 +298,10 @@ const showToast = (msg, type = 'success') => {
 const getAuthToken = () => localStorage.getItem('gallery-token') || '';
 const setAuthToken = (tok) => localStorage.setItem('gallery-token', tok);
 
-// Fetch live images from OSS backend (GET /api/images)
-const fetchLiveImages = async () => {
+// 从 OSS 服务端拉取最新图片清单（GET /api/images，生产由 nginx 反代到 images-server）
+// silent=true 用于页面自动同步：后端未部署或不可达时静默退回构建期静态快照，
+// 不打扰访客；仅用户手动点击「实时同步」时才给出失败提示。
+const fetchLiveImages = async ({ silent = false } = {}) => {
   syncing.value = true;
   try {
     const res = await fetch('/api/images');
@@ -307,13 +309,15 @@ const fetchLiveImages = async () => {
       const data = await res.json();
       if (data.ok && Array.isArray(data.images)) {
         allImages.value = data.images;
-        showToast(`已从 OSS 同步 ${data.images.length} 幅最新图片！`);
+        if (!silent) showToast(`已从 OSS 同步 ${data.images.length} 幅最新图片！`);
+      } else if (!silent) {
+        showToast('服务端返回数据格式异常', 'error');
       }
-    } else {
+    } else if (!silent) {
       showToast('无法连接 OSS 服务端接口，当前展示静态快照', 'error');
     }
   } catch (e) {
-    showToast('同步失败，请检查网络或后端服务', 'error');
+    if (!silent) showToast('同步失败，请检查网络或后端服务', 'error');
   } finally {
     syncing.value = false;
   }
@@ -552,8 +556,8 @@ const handleKeyDown = (e) => {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
-  // Auto-fetch live images from OSS on load
-  fetchLiveImages();
+  // 页面载入时静默尝试与 OSS 服务端对齐，失败则直接展示静态快照
+  fetchLiveImages({ silent: true });
 });
 
 onUnmounted(() => {

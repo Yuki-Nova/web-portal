@@ -33,8 +33,8 @@
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-paper);
   border-radius: 8px;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
-              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
               border-color 0.25s ease;
 }
 
@@ -54,4 +54,158 @@
   font-family: var(--font-serif);
   font-weight: 600;
   border-radius: 4px;
+}
+
+/* 隐藏滚动条（保留滚动能力）——Header 横向导航与侧栏目录使用 */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── 文章正文排版 ──
+ * 原先模板使用 typography 插件的 prose 类，但工程未安装 @tailwindcss/typography，
+ * 该类从未生成（构建产物中 0 命中），正文完全裸排。
+ * 这里手写等价的最小排版层，零依赖，令牌全部来自 tokens.css。
+ */
+.prose {
+  font-family: var(--font-serif);
+  line-height: 2;
+  letter-spacing: 0.03em;
+  color: var(--color-ink);
+  word-break: break-word;
+}
+
+.prose > :first-child {
+  margin-top: 0;
+}
+
+.prose > :last-child {
+  margin-bottom: 0;
+}
+
+.prose p {
+  margin: 0 0 1.15em;
+}
+
+.prose a {
+  color: var(--color-seal);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--color-seal-border);
+  transition: text-decoration-color 0.2s ease;
+}
+
+.prose a:hover {
+  text-decoration-color: var(--color-seal);
+}
+
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-weight: 700;
+  line-height: 1.6;
+  letter-spacing: 0.05em;
+  margin: 1.8em 0 0.8em;
+}
+
+.prose h2 {
+  font-size: 1.35em;
+  padding-left: 0.6em;
+  border-left: 3px solid var(--color-seal);
+}
+
+.prose h3 {
+  font-size: 1.15em;
+}
+
+.prose ul,
+.prose ol {
+  margin: 0 0 1.15em;
+  padding-left: 1.5em;
+}
+
+.prose ul {
+  list-style: disc;
+}
+
+.prose ol {
+  list-style: decimal;
+}
+
+.prose li {
+  margin: 0.35em 0;
+}
+
+.prose blockquote {
+  margin: 1.5em 0;
+  padding: 0.4em 0 0.4em 1.1em;
+  border-left: 3px solid var(--color-seal-border);
+  background-color: var(--color-seal-soft);
+  color: var(--color-ink-muted);
+  font-style: normal;
+}
+
+.prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.6em auto;
+  border-radius: 4px;
+  box-shadow: var(--shadow-paper);
+}
+
+.prose hr {
+  margin: 2.5em 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  background-color: var(--color-seal-soft);
+  color: var(--color-seal);
+}
+
+.prose pre {
+  margin: 1.5em 0;
+  padding: 1em 1.2em;
+  overflow-x: auto;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface-elevated);
+  font-size: 0.875em;
+  line-height: 1.7;
+}
+
+.prose pre code {
+  padding: 0;
+  background: none;
+  color: inherit;
+}
+
+.prose table {
+  width: 100%;
+  margin: 1.5em 0;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+
+.prose th,
+.prose td {
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.prose th {
+  background-color: var(--color-seal-soft);
+  font-weight: 600;
 }
