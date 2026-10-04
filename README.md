@@ -9,7 +9,7 @@
 | 路由 | 内容 | 数据来源 |
 |---|---|---|
 | `/` | 个人名片 + 门户入口卡片（走 BaseLayout 统一骨架） | 静态 |
-| `/poems` | 诗词墙（纯诗词页，无存稿列表与个人信息卡） | `src/data/poetry-wall.json` |
+| `/poems` | 诗词墙（纯诗词页，无存稿列表与个人信息卡） | `src/data/poetry-wall.json`（由 `scripts/sync-poetry-wall.mjs` 从 `src/content/blog/` 生成，**禁止手改**） |
 | `/posts/[slug]` | 文章详情页（居中单栏、上下篇导航、朱砂钤印） | `src/content/blog/*.md` |
 | `/archives` | 文集编年（每页 20 篇，构建期分页） | content collection |
 | `/categories` `/tags` | 分类 / 标签索引卡片；详情页 `/categories/<分类>/`、`/tags/<标签>/` 各自分页 | content collection |
@@ -74,7 +74,7 @@ pwsh -NoProfile -File scripts\publish.ps1 -SkipBuild
 
 ## 技术栈
 
-- **Astro 5.18**（`output: 'static'`，87 个静态页面）
+- **Astro 5.18**（`output: 'static'`，当前 107 个静态页面）
 - **Vue 3.5 Islands**（填词引擎、相册、诗词墙、搜索、主题切换共 5 个交互孤岛）
 - **Tailwind CSS 3.4**（配置式主题，颜色全部走 CSS 变量）
 - 设计系统「纸墨·新文人」：`src/styles/tokens.css` 是唯一令牌源
@@ -83,10 +83,10 @@ pwsh -NoProfile -File scripts\publish.ps1 -SkipBuild
 
 ```
 src/
-├── content/blog/          80 篇诗词 Markdown（与旧 Hexo _posts 同源）
+├── content/blog/          81 篇诗词 Markdown（唯一事实源，新文章写这里）
 ├── data/
 │   ├── gallery.json       相册数据（由 scripts/extract-gallery.js 生成）
-│   └── poetry-wall.json   诗词墙数据（80 条）
+│   └── poetry-wall.json   诗词墙数据（由 scripts/sync-poetry-wall.mjs 从 content/blog 生成，禁止手改）
 ├── poetry-engine/         填词引擎：core 算法 + composables + 韵书/平仄数据
 ├── components/
 │   ├── poetry/            填词案头 UI（自 poetry_tool 迁移）
@@ -97,6 +97,9 @@ src/
     ├── tokens.css         设计令牌（含 poetry 组件兼容层）
     └── global.css         纸墨卡片、印章徽标、文章正文排版
 public/cipai.json          153 词牌数据（构建期随 dist 一起发布）
+scripts/new-post.mjs       新建博文脚手架（npm run new）
+scripts/sync-poetry-wall.mjs 由 content/blog 生成 poetry-wall.json（npm run sync，build 前自动跑）
+scripts/publish.ps1        一键发布：git 基线 → 构建 → 断言 → 打包 → 上传 → 校验
 scripts/extract-gallery.js 从旧相册静态快照抽取 gallery.json
 ```
 

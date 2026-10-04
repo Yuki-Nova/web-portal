@@ -144,7 +144,7 @@ Astro 岛内使用 Vue 的 `<Teleport>` 会在 hydration 时破坏宿主 DOM（�
 
 ## 四、改动后的验证流程
 
-1. `npm run build`（必须 105 页全绿）。
+1. `npm run build`（当前 107 页）。页数会随文章增减而变，**不要记死某个数字**；判断标准是构建全绿，且 `dist/posts/` 的文章页数等于 `src/content/blog/*.md` 的篇数（`publish.ps1` 步骤 3 已把它做成硬断言）。
 2. 检查产物里的令牌与透明度类是否真的生成（源码通过不代表 CSS 通过）：
 
    ```powershell
@@ -189,13 +189,16 @@ Astro 岛内使用 Vue 的 `<Teleport>` 会在 hydration 时破坏宿主 DOM（�
 3. 落位后有完整性门禁：远端 `REMOTE_MISSING` 必须为 0，否则中止。
 4. `-Prune`（删远端多余文件）**默认关闭**，开启前先看脚本打印的待删清单并确认。当前站点根无不可变属性文件，逻辑上安全。
 5. 发布后脚本会 curl 校验 7 条 URL（含最新一篇的**中文 slug**）并比对线上/本地 `search-index.json` 字节数；出现 BAD 不自动回滚，按摘要里的回滚命令处理。
-6. **博文与诗词唯一事实源**：新文章直接写 `src/content/blog/<标题>.md`，可用 `npm run new "标题"` 脚手架创建。`src/data/poetry-wall.json` 已改为构建期与发布期由 `scripts/sync-poetry-wall.mjs` 自动同步，**禁止手工编辑该 JSON 文件**。发布执行 `npm run pub` 即可一键提交、同步、构建、部署与校验。
+6. **博文与诗词唯一事实源**：新文章直接写 `src/content/blog/<标题>.md`，可用 `npm run new "标题"` 脚手架创建。`src/data/poetry-wall.json` 已改为构建期与发布期由 `scripts/sync-poetry-wall.mjs` 自动同步，**禁止手工编辑该 JSON 文件**。发布执行 `npm run pub`（即 `pwsh -NoProfile -File scripts\publish.ps1`）一键提交、同步、构建、部署与校验。
+7. **诗词墙跳转 slug 的唯一权威源是内容集合的 `post.id`**：`src/pages/poems/index.astro` 在构建期用 `getCollection('blog')` 按标题映射后注入岛的 props。**禁止用文件名或标题推导 slug** —— Astro 的 glob loader 会小写化 ASCII 并删掉 `.`/`·`/`，` 等标点（`Eden.md` → `eden`、`永遇乐.voyager_01.md` → `永遇乐voyager_01`）。2026-10-04 曾用「空格换短横线」的近似算法，导致诗词墙 **39/81 个链接 404**。改动此处后，务必比对 `dist/poems/index.html` 的 props 里所有 slug 与 `dist/posts/` 的目录名（应 81/81 命中）。
 
-**四个已踩的坑（改脚本时务必注意）**
+**六个已踩的坑（改脚本时务必注意）**
 
 - **Windows 版 `bsdtar`（`C:\WINDOWS\system32\tar.exe`）的 `-tzf` 清单是 CRLF 结尾**，拿它做 `grep -v '/$' | sort | comm` 会全错（实测 124 个文件被算成 39 条、91 条“多余”）。**清单比对一律放在服务器上做**（Ubuntu GNU tar 输出 LF）；本地只负责打包，不解包、不列清单。
 - **PowerShell here-string 管道进 `ssh "bash -s"` 会带 CRLF**，远端把 `\r` 当命令的一部分（实测 `xargs` 报 `md5sum\r: No such file or directory`、`tail -1` 报 `option used in invalid context`）。`publish.ps1` 的 `Invoke-Remote` 统一 `-replace "\r",""` 后再发送，改这段时不要去掉。
 - **Windows 版 `bsdtar` 会把 Windows 的文件模式写进归档**（目录 777、文件 666），GNU tar 解压时照搬，线上权限被放宽（2026-10-05 首次实跑即把全站从 755/644 变成 777/666）。因此远端脚本解压后必须 `find -type d -exec chmod 755` + `find -type f -exec chmod 644` 再 `chown www:www`，这三步不能省。发布后可用 `find <站点根> -printf '%m\n' | sort | uniq -c` 核对（应为 107 个 755 目录、124 个 644 文件）。
 - **远端清单过滤必须 `grep -v '^$'`**：`tar` 的根条目 `./` 经 `sed 's|^\./||'` 后是空行，不滤掉会让 `comm` 误报「缺失 1 个文件」。
+- **`scripts/publish.ps1` 必须保存为 UTF-8 with BOM**：Windows PowerShell 5.1 没有 BOM 时按系统 ANSI 代码页解码整个文件，中文被解错后直接抛 **60 个解析错误**（`Unexpected token '}'`），脚本完全无法运行（2026-10-04 实测）。用编辑器另存时注意别把 BOM 丢掉；`pwsh` 7 不受影响，所以只用 7 测试会漏掉这个坑。
+- **任何会写文件的步骤都要在 `-DryRun` 下跳过**：`publish.ps1` 步骤 1 会跑 `sync-poetry-wall.mjs` 重写 `src/data/poetry-wall.json`，曾因缺 `-not $DryRun` 守卫让 dry-run 改动了工作区（2026-10-04 实测 mtime 变化）。
 
 **本机依赖**：Node 24 + `npm`、`git`、系统 `tar`/`curl`、`ssh`/`scp`（OpenSSH 9.5）。**本机没有 `rsync`**，所以是全量发布（124 文件，tar 约 490 KB，耗时数秒）。

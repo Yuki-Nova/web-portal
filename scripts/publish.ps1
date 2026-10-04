@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   web-portal 一键发布：git 基线 → 构建 → 产物断言 → 打包 → 上传 → 落位 → 校验。
 
@@ -7,7 +7,9 @@
   站点根与产物阈值以 2026-10-05 服务器只读核实结果为准。
 
   兼容 Windows PowerShell 5.1 与 PowerShell 7（不用 ?: 与 ?? 之类的新语法）。
-  本文件必须以 UTF-8 with BOM 保存，否则 5.1 会把中文注释读成乱码。
+  **本文件必须保存为 UTF-8 with BOM**：5.1 在没有 BOM 时会按系统 ANSI 代码页
+  解码整个文件，中文注释/字符串被解错后会直接抛解析错误（2026-10-04 实测 60 个
+  "Unexpected token '}'"，脚本完全无法运行）。用 pwsh 7 跑则没有这个限制。
 
 .EXAMPLE
   pwsh -NoProfile -File scripts\publish.ps1 -Message "新增博文《xxx》"
@@ -177,11 +179,15 @@ if ($DryRun) {
 # ---------- 步骤 1：git 基线 ----------
 
 Step 'git 基线'
-# 自动同步诗词墙数据，保证 Markdown 与诗词墙绝对一致
+# 自动同步诗词墙数据，保证 Markdown 与诗词墙绝对一致。
+# 注意：这一句会写 src/data/poetry-wall.json，因此 -DryRun 下必须跳过，
+# 否则 dry-run 会改动工作区（2026-10-04 踩过）。
 $syncScript = Join-Path $script:ProjectRoot 'scripts\sync-poetry-wall.mjs'
-if (Test-Path $syncScript) {
+if ((Test-Path $syncScript) -and -not $DryRun) {
     Info "执行诗词墙数据同步 ..."
     Invoke-Native node.exe @($syncScript) | Out-Null
+} elseif (Test-Path $syncScript) {
+    Write-Host ("  [dry-run] node " + $syncScript) -ForegroundColor DarkGray
 }
 
 $prevSha = (Invoke-Native git.exe @('rev-parse', '--short', 'HEAD')).Trim()
@@ -378,15 +384,35 @@ Step '发布后校验'
 if ($NoVerify) {
     Info '按参数跳过校验'
 } else {
-    # 取源目录中最新修改的文章做中文 slug 校验（确保校验到最新发布的那篇）
+    # 最新一篇的 slug 必须取自产物，不能由文件名推导：
+    # Astro 的 glob loader 会小写化 ASCII 并去掉 `.`/`·`/`，` 等标点
+    # （Eden.md → eden、永遇乐.voyager_01.md → 永遇乐voyager_01），
+    # 自行推导会校验到不存在的 URL、误报 BAD（2026-10-04 踩过）。
     $blogDir = Join-Path $script:ProjectRoot 'src\content\blog'
     $newestFile = Get-ChildItem $blogDir -Filter *.md | Sort-Object LastWriteTime -Descending | Select-Object -First 1
     $newestSlug = ''
     $newestTitle = ''
     if ($newestFile) {
-        $slugName = $newestFile.BaseName -replace '\s+', '-'
-        $newestSlug = [System.Uri]::EscapeDataString($slugName)
         $newestTitle = $newestFile.BaseName
+        $idxPath = Join-Path $distPath 'search-index.json'
+        if (Test-Path $idxPath) {
+            # front-matter 的 title 优先于文件名
+            $fm = Get-Content $newestFile.FullName -Raw -Encoding UTF8
+            $fmTitle = [regex]::Match($fm, '(?m)^title:[ \t]*(.+?)[ \t]*\r?$')
+            if ($fmTitle.Success) {
+                $newestTitle = ($fmTitle.Groups[1].Value -replace "^['""]|['""]$", '').Trim()
+            }
+            $idx = @(Get-Content $idxPath -Raw -Encoding UTF8 | ConvertFrom-Json)
+            $hit = $idx | Where-Object { $_.title -eq $newestTitle } | Select-Object -First 1
+            if ($hit) { $newestSlug = $hit.slug }
+        }
+        if (-not $newestSlug) {
+            # 兜底：产物里 mtime 最新的文章目录，目录名本身就是真实 slug
+            $newestDir = Get-ChildItem $postsDir -Directory -ErrorAction SilentlyContinue |
+                Sort-Object LastWriteTime -Descending | Select-Object -First 1
+            if ($newestDir) { $newestSlug = $newestDir.Name }
+        }
+        if ($newestSlug) { $newestSlug = [System.Uri]::EscapeDataString($newestSlug) }
     }
 
     $checks = @(
