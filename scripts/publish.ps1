@@ -309,7 +309,9 @@ cd '$RemoteRoot'
 find . -type f | sed 's|^\./||' | sort > '/root/web-portal-deploy-$stamp.lst'
 
 # 期望清单 = 本次包内文件
-tar -tzf '$remoteTar' | sed 's|^\./||' | grep -v '/$' | grep -v '^\.$' | sort > /tmp/expected.lst
+# 注意：tar 的根条目 "./" 经 sed 后是空行，必须 grep -v '^$' 去掉，
+# 否则 comm 会误报“缺失 1 个文件”（2026-10-05 实跑踩到）。
+tar -tzf '$remoteTar' | sed 's|^\./||' | grep -v '/$' | grep -v '^$' | sort > /tmp/expected.lst
 
 tar -xzf '$remoteTar' -C '$RemoteRoot'
 chown -R www:www '$RemoteRoot'
