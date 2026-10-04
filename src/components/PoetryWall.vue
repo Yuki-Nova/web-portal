@@ -56,7 +56,7 @@
       <!-- Navigation Arrow Left -->
       <button
         @click="prevPoem"
-        class="hidden sm:flex absolute -left-12 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full border border-border-paper bg-surface/80 hover:bg-surface text-ink-muted hover:text-ink items-center justify-center transition-all shadow-paper z-10"
+        class="hidden sm:flex absolute -left-12 top-52 sm:top-56 -translate-y-1/2 w-9 h-9 rounded-full border border-border-paper bg-surface/80 hover:bg-surface text-ink-muted hover:text-ink items-center justify-center transition-all shadow-paper z-10"
         aria-label="上一首"
       >
         ‹
@@ -64,7 +64,7 @@
 
       <!-- The Poetry Paper Card -->
       <article
-        class="paper-card p-8 sm:p-12 relative overflow-hidden transition-all duration-300 min-h-[320px] flex flex-col justify-between"
+        class="paper-card p-8 sm:p-12 relative overflow-hidden transition-all duration-300 min-h-[480px] sm:min-h-[520px] flex flex-col justify-between"
       >
         <!-- Watermark -->
         <div
@@ -73,7 +73,9 @@
           {{ watermarkText }}
         </div>
 
-        <div>
+        <Transition name="poem-fade" mode="out-in">
+          <div :key="currentPoem?.title" class="flex-1 flex flex-col justify-between">
+            <div>
           <!-- Card Header -->
           <div class="flex items-start justify-between gap-4 border-b border-border-paper pb-4 mb-8">
             <div>
@@ -259,12 +261,14 @@
             </button>
           </div>
         </div>
+        </div>
+      </Transition>
       </article>
 
       <!-- Navigation Arrow Right -->
       <button
         @click="nextPoem"
-        class="hidden sm:flex absolute -right-12 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full border border-border-paper bg-surface/80 hover:bg-surface text-ink-muted hover:text-ink items-center justify-center transition-all shadow-paper z-10"
+        class="hidden sm:flex absolute -right-12 top-52 sm:top-56 -translate-y-1/2 w-9 h-9 rounded-full border border-border-paper bg-surface/80 hover:bg-surface text-ink-muted hover:text-ink items-center justify-center transition-all shadow-paper z-10"
         aria-label="下一首"
       >
         ›
@@ -558,3 +562,20 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
 });
 </script>
+
+<style scoped>
+.poem-fade-enter-active,
+.poem-fade-leave-active {
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.poem-fade-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.poem-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+</style>

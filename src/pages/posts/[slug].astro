@@ -51,36 +51,41 @@ const formatDate = (d?: string | Date) => {
     </div>
 
     <!-- 居中单栏正文（原先的右栏个人信息卡与目录已移除） -->
-    <article class="paper-card p-6 sm:p-12 relative overflow-hidden">
+    <article
+      class="paper-card p-6 sm:p-12 relative overflow-hidden min-h-[460px] sm:min-h-[520px] flex flex-col justify-between transition-all duration-300"
+      transition:name="post-card"
+    >
       <!-- Watermark -->
       <div class="absolute -right-8 -bottom-8 text-9xl font-serif text-ink opacity-[0.02] select-none pointer-events-none">
         墨
       </div>
 
-      <!-- Post Header -->
-      <header class="border-b border-border-paper pb-6 mb-8 text-center sm:text-left">
-        <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs font-mono text-ink-muted mb-3">
-          <span>{formatDate(post.data.date)}</span>
-          {post.data.categories?.map((cat) => (
-            <a href={`/categories/${encodeURIComponent(cat)}/`} class="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 font-serif text-[11px] text-ink-muted hover:text-seal no-underline">
-              {cat}
-            </a>
-          ))}
-          {post.data.tags?.map((t) => (
-            <a href={`/tags/${encodeURIComponent(t)}/`} class="px-2 py-0.5 rounded bg-seal/5 font-serif text-[11px] text-seal border border-seal/15 hover:bg-seal/10 no-underline">
-              {t}
-            </a>
-          ))}
+      <div class="flex-1">
+        <!-- Post Header -->
+        <header class="border-b border-border-paper pb-6 mb-8 text-center sm:text-left">
+          <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs font-mono text-ink-muted mb-3">
+            <span>{formatDate(post.data.date)}</span>
+            {post.data.categories?.map((cat) => (
+              <a href={`/categories/${encodeURIComponent(cat)}/`} class="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 font-serif text-[11px] text-ink-muted hover:text-seal no-underline">
+                {cat}
+              </a>
+            ))}
+            {post.data.tags?.map((t) => (
+              <a href={`/tags/${encodeURIComponent(t)}/`} class="px-2 py-0.5 rounded bg-seal/5 font-serif text-[11px] text-seal border border-seal/15 hover:bg-seal/10 no-underline">
+                {t}
+              </a>
+            ))}
+          </div>
+
+          <h1 class="text-3xl sm:text-4xl font-serif font-bold text-ink tracking-wider">
+            {post.data.title}
+          </h1>
+        </header>
+
+        <!-- Post Markdown Content -->
+        <div class="prose max-w-none text-base sm:text-lg">
+          <Content />
         </div>
-
-        <h1 class="text-3xl sm:text-4xl font-serif font-bold text-ink tracking-wider">
-          {post.data.title}
-        </h1>
-      </header>
-
-      <!-- Post Markdown Content -->
-      <div class="prose max-w-none text-base sm:text-lg">
-        <Content />
       </div>
 
       <!-- Post Footer / Seal Stamp -->
