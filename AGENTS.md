@@ -184,12 +184,12 @@ Astro 岛内使用 Vue 的 `<Teleport>` 会在 hydration 时破坏宿主 DOM（�
 
 **硬规则**
 
-1. 脚本在步骤 1 要求工作区干净；有改动时必须给 `-Message`（中文简述、不加类型前缀），由脚本自动提交，保证每次发布都有可回滚基线。
+1. 脚本在步骤 1 保证每次发布都有可回滚基线；未提供 `-Message` 时会自动提取变更文章标题（如“更新博文《xxx》”），亦可显式传 `-Message`。
 2. 产物断言不可绕过：必备文件（`index.html`/`404.html`/`search-index.json`/`gallery.json`/`cipai.json`）存在、`dist/posts/` 文章页数 == `src/content/blog/*.md` 篇数、html 数 ≥ 100。构建不完整必须拦下，不许上传。
 3. 落位后有完整性门禁：远端 `REMOTE_MISSING` 必须为 0，否则中止。
 4. `-Prune`（删远端多余文件）**默认关闭**，开启前先看脚本打印的待删清单并确认。当前站点根无不可变属性文件，逻辑上安全。
 5. 发布后脚本会 curl 校验 7 条 URL（含最新一篇的**中文 slug**）并比对线上/本地 `search-index.json` 字节数；出现 BAD 不自动回滚，按摘要里的回滚命令处理。
-6. 发布中新文章上线 = 写 `src/content/blog/<标题>.md` +（要上诗词墙时）追加 `src/data/poetry-wall.json` 一条，两处不同源，别只改一处。
+6. **博文与诗词唯一事实源**：新文章直接写 `src/content/blog/<标题>.md`，可用 `npm run new "标题"` 脚手架创建。`src/data/poetry-wall.json` 已改为构建期与发布期由 `scripts/sync-poetry-wall.mjs` 自动同步，**禁止手工编辑该 JSON 文件**。发布执行 `npm run pub` 即可一键提交、同步、构建、部署与校验。
 
 **四个已踩的坑（改脚本时务必注意）**
 

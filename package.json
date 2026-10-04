@@ -5,8 +5,12 @@
   "scripts": {
     "dev": "astro dev --host",
     "start": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview"
+    "build": "node scripts/sync-poetry-wall.mjs && astro build",
+    "preview": "astro preview",
+    "new": "node scripts/new-post.mjs",
+    "sync": "node scripts/sync-poetry-wall.mjs",
+    "pub": "pwsh -NoProfile -File scripts/publish.ps1",
+    "publish": "pwsh -NoProfile -File scripts/publish.ps1"
   },
   "dependencies": {
     "@astrojs/vue": "^5.0.6",

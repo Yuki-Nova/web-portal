@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   web-portal 一键发布：git 基线 → 构建 → 产物断言 → 打包 → 上传 → 落位 → 校验。
 
@@ -44,6 +44,9 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::InputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ---------- 基础工具函数 ----------
 
@@ -174,11 +177,26 @@ if ($DryRun) {
 # ---------- 步骤 1：git 基线 ----------
 
 Step 'git 基线'
+# 自动同步诗词墙数据，保证 Markdown 与诗词墙绝对一致
+$syncScript = Join-Path $script:ProjectRoot 'scripts\sync-poetry-wall.mjs'
+if (Test-Path $syncScript) {
+    Info "执行诗词墙数据同步 ..."
+    Invoke-Native node.exe @($syncScript) | Out-Null
+}
+
 $prevSha = (Invoke-Native git.exe @('rev-parse', '--short', 'HEAD')).Trim()
 $dirty = (Invoke-Native git.exe @('status', '--porcelain')).Trim()
 if ($dirty) {
     if (-not $Message) {
-        Die "工作区有未提交改动，请用 -Message `"中文简述`" 提交后再发布：`n$dirty"
+        $blogDir = Join-Path $script:ProjectRoot 'src\content\blog'
+        $newest = Get-ChildItem $blogDir -Filter *.md | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        if ($dirty -match 'src[/\\]content[/\\]blog' -and $newest) {
+            $Message = "更新博文《" + $newest.BaseName + "》"
+            Info ("未提供 -Message，已自动提取博文标题：" + $Message)
+        } else {
+            $Message = "更新站点内容与组件"
+            Info ("未提供 -Message，使用默认提交信息：" + $Message)
+        }
     }
     Info ("提交改动：" + $Message)
     if (-not $DryRun) {
