@@ -30,6 +30,48 @@ npm run preview    # 预览构建产物，默认 http://localhost:4321
 
 环境：Node 24 + npm；本机 pnpm 位于 `D:\Myworksoftware\Node.js\node_global`。
 
+## 发布（本地构建 → 上传服务器）
+
+线上只吃静态产物，**源码与构建都只在本地**。发布统一走 `scripts/publish.ps1`，不要手工 `scp`。
+
+```powershell
+# 有未提交改动时：脚本会自动用这句中文说明提交，作为回滚基线
+pwsh -NoProfile -File scripts\publish.ps1 -Message "新增博文《xxx》"
+
+# 无改动、只想把当前产物推上去
+pwsh -NoProfile -File scripts\publish.ps1
+
+# 只演练：打印将执行的命令，不做任何改动（校验仍会跑，因为它只发 GET）
+pwsh -NoProfile -File scripts\publish.ps1 -DryRun
+```
+
+| 参数 | 说明 |
+|---|---|
+| `-Message` | git 提交说明（中文简述）；工作区有改动时必填 |
+| `-SkipBuild` | 复用现有 `dist/`，不重新构建 |
+| `-DryRun` | 只打印命令，零改动 |
+| `-Prune` | 删除远端站点根中不在本次产物内的多余文件（**默认关**，只报告） |
+| `-NoVerify` | 跳过发布后的 curl 校验 |
+| `-SshHost` / `-RemoteRoot` | 默认 `root@121.43.153.125` / `/www/wwwroot/yukinova.top-new` |
+
+脚本的 8 步：前置检查（含免密 SSH 探测）→ git 基线 → `npm run build` → 产物断言 → `tar` 打包 → `scp` → 远端解压覆盖 + `chown www:www` + 缺失门禁 → curl 校验 7 条 URL（含最新一篇的中文 slug）并比对线上/本地 `search-index.json` 字节数。
+
+**前置（一次性）**：部署 SSH 公钥，之后全程免密。
+
+```powershell
+type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh root@121.43.153.125 "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+```
+
+**回滚**：产物由 git 保证可复现，退到上一版提交重新构建再发布即可（脚本结束时会打印确切命令）。
+
+```powershell
+git checkout <上一版 sha>
+npm run build
+pwsh -NoProfile -File scripts\publish.ps1 -SkipBuild
+```
+
+发布细节与两个已踩的坑（Windows `bsdtar` 的 CRLF 清单、PowerShell 管道进 `ssh` 的 CRLF）见 [AGENTS.md](AGENTS.md) 第六节。
+
 ## 技术栈
 
 - **Astro 5.18**（`output: 'static'`，87 个静态页面）
