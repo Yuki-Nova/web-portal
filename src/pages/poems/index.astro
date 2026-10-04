@@ -1,7 +1,34 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PoetryWall from '../../components/PoetryWall.vue';
 import poetryWallData from '../../data/poetry-wall.json';
+
+/**
+ * 诗词墙的跳转链接必须用内容集合的真实 id 作为 slug。
+ *
+ * post.id 与 /posts/[slug].astro 里的路由参数完全同源，是唯一权威值；
+ * 绝不能用文件名或标题自行推导——Astro 的 glob loader 会做小写化与去标点：
+ *   Eden.md            → eden
+ *   登阁.别南苑既久.md   → 登阁别南苑既久
+ *   永遇乐.voyager_01.md → 永遇乐voyager_01
+ * 2026-10-04 曾用「空格换短横线」的近似算法，导致诗词墙 39/81 个链接 404。
+ */
+const posts = await getCollection('blog');
+const slugByTitle = new Map(posts.map((post) => [post.data.title, post.id]));
+
+const unmatchedTitles = [];
+const wallPoems = poetryWallData.map((poem) => {
+  const realSlug = slugByTitle.get(poem.title);
+  if (!realSlug) unmatchedTitles.push(poem.title);
+  return { ...poem, slug: realSlug || poem.slug };
+});
+
+if (unmatchedTitles.length > 0) {
+  console.warn(
+    `[poems] ${unmatchedTitles.length} 条诗词墙条目的标题在 src/content/blog/ 里找不到对应文章，链接可能失效：${unmatchedTitles.join('、')}`
+  );
+}
 ---
 
 <BaseLayout title="诗词 · yuki's stop" description="全部诗作">
@@ -12,10 +39,10 @@ import poetryWallData from '../../data/poetry-wall.json';
           <span class="w-2 h-2 rounded-full bg-seal"></span>
           <span>诗词墙</span>
         </h2>
-        <span class="text-xs font-serif text-ink-muted">共 {poetryWallData.length} 首</span>
+        <span class="text-xs font-serif text-ink-muted">共 {wallPoems.length} 首</span>
       </div>
 
-      <PoetryWall client:load poems={poetryWallData} />
+      <PoetryWall client:load poems={wallPoems} />
     </section>
   </div>
 </BaseLayout>
