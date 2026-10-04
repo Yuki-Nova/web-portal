@@ -414,8 +414,9 @@ const watermarkText = computed(() => {
 
 // 文章详情页链接
 const postUrl = computed(() => {
-  if (!currentPoem.value?.title) return '/poems';
-  return `/posts/${encodeURIComponent(currentPoem.value.title)}/`;
+  if (!currentPoem.value) return '/poems';
+  const slug = currentPoem.value.slug || currentPoem.value.title?.replace(/\s+/g, '-');
+  return `/posts/${encodeURIComponent(slug)}/`;
 });
 
 // 分离诗词文本与附图

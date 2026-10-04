@@ -46,7 +46,7 @@ param(
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
-$OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = New-Object System.Text.UTF8Encoding $false
 
 # ---------- 基础工具函数 ----------
 
@@ -378,10 +378,16 @@ Step '发布后校验'
 if ($NoVerify) {
     Info '按参数跳过校验'
 } else {
-    # 取产物中最新的文章页做中文 slug 校验
-    $newestPost = Get-ChildItem $postsDir -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    # 取源目录中最新修改的文章做中文 slug 校验（确保校验到最新发布的那篇）
+    $blogDir = Join-Path $script:ProjectRoot 'src\content\blog'
+    $newestFile = Get-ChildItem $blogDir -Filter *.md | Sort-Object LastWriteTime -Descending | Select-Object -First 1
     $newestSlug = ''
-    if ($newestPost) { $newestSlug = [System.Uri]::EscapeDataString($newestPost.Name) }
+    $newestTitle = ''
+    if ($newestFile) {
+        $slugName = $newestFile.BaseName -replace '\s+', '-'
+        $newestSlug = [System.Uri]::EscapeDataString($slugName)
+        $newestTitle = $newestFile.BaseName
+    }
 
     $checks = @(
         @{ Path = '/'; Expect = 200; Name = '首页' },
@@ -392,7 +398,7 @@ if ($NoVerify) {
         @{ Path = '/no-such-page-xyz'; Expect = 404; Name = '404 页' }
     )
     if ($newestSlug) {
-        $checks += @{ Path = ('/posts/' + $newestSlug + '/'); Expect = 200; Name = ('文章页 ' + $newestPost.Name) }
+        $checks += @{ Path = ('/posts/' + $newestSlug + '/'); Expect = 200; Name = ('文章页 ' + $newestTitle) }
     }
 
     $hits = 0

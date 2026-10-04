@@ -97,12 +97,14 @@ export function syncPoetryWall() {
     const { data, body } = parsePost(rawContent);
 
     const title = data.title || file.replace(/\.md$/, '');
+    const slug = file.replace(/\.md$/, '').replace(/\s+/g, '-');
     const date = formatDate(data.date);
     const categories = Array.isArray(data.categories) ? data.categories : [];
     const tags = Array.isArray(data.tags) ? data.tags : [];
     const content = formatPoemContent(body);
 
     poems.push({
+      slug,
       title,
       date,
       categories,
