@@ -179,7 +179,7 @@ Astro 岛内使用 Vue 的 `<Teleport>` 会在 hydration 时破坏宿主 DOM（�
 | SSH | `root@121.43.153.125`，已部署 `~/.ssh/id_ed25519` 公钥（免密） |
 | 站点根 | `/www/wwwroot/yukinova.top-new`（属主 `www:www`，无 `.user.ini`、无不可变属性） |
 | 旧站点目录 | `/www/wwwroot/yukinova.top` **已删除**，回滚只能解 `/root/_archive/website-old-20261003.tar.gz` |
-| 发布方式 | `tar -czf` → `scp` 到 `/tmp` → 远端 `tar -xzf` 覆盖 → `chown -R www:www` → 删临时包 |
+| 发布方式 | `tar -czf` → `scp` 到 `/tmp` → 远端 `tar -xzf` 覆盖 → `chmod` 归一化 `755/644` → `chown -R www:www` → 删临时包 |
 | Nginx | **不需要 reload**（纯静态覆盖）。只有改 conf 才 reload，且必须 `/etc/init.d/nginx reload`（`nginx -s reload` 在这台机上无效，pid 在 `/www/server/nginx/logs/nginx.pid`） |
 
 **硬规则**
@@ -191,9 +191,11 @@ Astro 岛内使用 Vue 的 `<Teleport>` 会在 hydration 时破坏宿主 DOM（�
 5. 发布后脚本会 curl 校验 7 条 URL（含最新一篇的**中文 slug**）并比对线上/本地 `search-index.json` 字节数；出现 BAD 不自动回滚，按摘要里的回滚命令处理。
 6. 发布中新文章上线 = 写 `src/content/blog/<标题>.md` +（要上诗词墙时）追加 `src/data/poetry-wall.json` 一条，两处不同源，别只改一处。
 
-**两个已踩的坑（写脚本时务必注意）**
+**四个已踩的坑（改脚本时务必注意）**
 
 - **Windows 版 `bsdtar`（`C:\WINDOWS\system32\tar.exe`）的 `-tzf` 清单是 CRLF 结尾**，拿它做 `grep -v '/$' | sort | comm` 会全错（实测 124 个文件被算成 39 条、91 条“多余”）。**清单比对一律放在服务器上做**（Ubuntu GNU tar 输出 LF）；本地只负责打包，不解包、不列清单。
 - **PowerShell here-string 管道进 `ssh "bash -s"` 会带 CRLF**，远端把 `\r` 当命令的一部分（实测 `xargs` 报 `md5sum\r: No such file or directory`、`tail -1` 报 `option used in invalid context`）。`publish.ps1` 的 `Invoke-Remote` 统一 `-replace "\r",""` 后再发送，改这段时不要去掉。
+- **Windows 版 `bsdtar` 会把 Windows 的文件模式写进归档**（目录 777、文件 666），GNU tar 解压时照搬，线上权限被放宽（2026-10-05 首次实跑即把全站从 755/644 变成 777/666）。因此远端脚本解压后必须 `find -type d -exec chmod 755` + `find -type f -exec chmod 644` 再 `chown www:www`，这三步不能省。发布后可用 `find <站点根> -printf '%m\n' | sort | uniq -c` 核对（应为 107 个 755 目录、124 个 644 文件）。
+- **远端清单过滤必须 `grep -v '^$'`**：`tar` 的根条目 `./` 经 `sed 's|^\./||'` 后是空行，不滤掉会让 `comm` 误报「缺失 1 个文件」。
 
 **本机依赖**：Node 24 + `npm`、`git`、系统 `tar`/`curl`、`ssh`/`scp`（OpenSSH 9.5）。**本机没有 `rsync`**，所以是全量发布（124 文件，tar 约 490 KB，耗时数秒）。

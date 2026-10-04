@@ -314,6 +314,12 @@ find . -type f | sed 's|^\./||' | sort > '/root/web-portal-deploy-$stamp.lst'
 tar -tzf '$remoteTar' | sed 's|^\./||' | grep -v '/$' | grep -v '^$' | sort > /tmp/expected.lst
 
 tar -xzf '$remoteTar' -C '$RemoteRoot'
+
+# Windows 版 bsdtar 会把 Windows 的文件模式（目录 777 / 文件 666）写进归档，
+# GNU tar 解压时照搬，线上权限会被放宽（2026-10-05 实跑踩到：全站变 777/666）。
+# 因此解压后统一归一化回 755 / 644，再改属主。
+find '$RemoteRoot' -type d -exec chmod 755 {} +
+find '$RemoteRoot' -type f -exec chmod 644 {} +
 chown -R www:www '$RemoteRoot'
 
 # 远端现有清单
