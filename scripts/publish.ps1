@@ -417,3 +417,8 @@ Write-Host ("  回滚到上一版（" + $prevSha + "）：") -ForegroundColor Ye
 Write-Host ("    git checkout " + $prevSha)
 Write-Host  '    npm run build'
 Write-Host ("    pwsh -NoProfile -File scripts\publish.ps1 -SkipBuild")
+
+# 成功收尾才清本地临时包；失败时保留，便于排查
+if (-not $DryRun) {
+    if (Test-Path $localTar) { Remove-Item $localTar -Force -ErrorAction SilentlyContinue }
+}
