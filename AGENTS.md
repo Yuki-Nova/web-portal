@@ -95,7 +95,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   - `src/components/SearchModal.vue`：**去掉 `<Teleport>`**，改由 `BaseLayout.astro` 挂到 `<Footer />` 之后的 body 末尾，直接以 `fixed inset-0` 覆盖全屏（不在 `backdrop-blur` 容器内，无需 Teleport），并监听上述事件。
 
   **不要**把弹窗挪回 Header，也**不要**再加回 `<Teleport>`。若将来确需 Teleport，先跑上表的隔离实验确认。
-- **回归要点**：`agent-browser eval 'Array.from(document.body.children).map(e=>e.tagName).join(",")'` 应为 `HEADER,MAIN,FOOTER,SCRIPT,ASTRO-ISLAND`；`document.querySelectorAll("astro-island").length` 应为 4；`agent-browser errors` 应为空；点击 Header 第二个按钮后 `input[placeholder]` 存在且输入关键词能出结果。
+- **回归要点**：`agent-browser eval 'Array.from(document.body.children).map(e=>e.tagName).join(",")'` 应为 `HEADER,MAIN,FOOTER,SCRIPT,ASTRO-ISLAND`；`document.querySelectorAll("astro-island").length` 在 `/poetry` 页**当前为 5**（Header 内 2 + body 末尾搜索弹窗 1 + 填词工作台 1 + 韵书速查 1；2026-10-06 新增韵书速查后由 4 变 5）。**岛数会随功能增减而变化，不要把某个数字当判据**——真正的判据是 `body.children` 结构完好、且与实际岛数一致；`agent-browser errors` 应为空；点击 Header 第二个按钮后 `input[placeholder]` 存在且输入关键词能出结果。
 
 ### 2. 大块数据不要内联进岛的 props（**已修**，2026-10-03）
 
@@ -185,7 +185,7 @@ Astro 岛内使用 Vue 的 `<Teleport>` 会在 hydration 时破坏宿主 DOM（�
 **硬规则**
 
 1. 脚本在步骤 1 保证每次发布都有可回滚基线；未提供 `-Message` 时会自动提取变更文章标题（如“更新博文《xxx》”），亦可显式传 `-Message`。
-2. 产物断言不可绕过：必备文件（`index.html`/`404.html`/`search-index.json`/`gallery.json`/`cipai.json`）存在、`dist/posts/` 文章页数 == `src/content/blog/*.md` 篇数、html 数 ≥ 100。构建不完整必须拦下，不许上传。
+2. 产物断言不可绕过：必备文件（`index.html`/`404.html`/`search-index.json`/`gallery.json`/`cipai.json`/`rss.xml`/`robots.txt`/`sitemap-index.xml`/`og-default.png`）存在、`dist/posts/` 文章页数 == `src/content/blog/*.md` 篇数、html 数 ≥ 100。构建不完整必须拦下，不许上传。**新增前端入口时同步把文件名加进 `publish.ps1` 的 `$required` 与线上 curl 校验表**（2026-10-06 已随 SEO/RSS 补齐）。
 3. 落位后有完整性门禁：远端 `REMOTE_MISSING` 必须为 0，否则中止。
 4. `-Prune`（删远端多余文件）**默认关闭**，开启前先看脚本打印的待删清单并确认。当前站点根无不可变属性文件，逻辑上安全。
 5. 发布后脚本会 curl 校验 7 条 URL（含最新一篇的**中文 slug**）并比对线上/本地 `search-index.json` 字节数；出现 BAD 不自动回滚，按摘要里的回滚命令处理。
@@ -202,3 +202,22 @@ Astro 岛内使用 Vue 的 `<Teleport>` 会在 hydration 时破坏宿主 DOM（�
 - **任何会写文件的步骤都要在 `-DryRun` 下跳过**：`publish.ps1` 步骤 1 会跑 `sync-poetry-wall.mjs` 重写 `src/data/poetry-wall.json`，曾因缺 `-not $DryRun` 守卫让 dry-run 改动了工作区（2026-10-04 实测 mtime 变化）。
 
 **本机依赖**：Node 24 + `npm`、`git`、系统 `tar`/`curl`、`ssh`/`scp`（OpenSSH 9.5）。**本机没有 `rsync`**，所以是全量发布（当前 126 个文件 / tar 约 490 KB，上传约 1 秒）。
+
+## 七、2026-10-06 新增的模块与入口
+
+| 新增 | 作用 | 注意 |
+|---|---|---|
+| `src/utils/excerpt.js` | 正文 → 单行纯文本摘要（`toExcerpt`），供 `meta description` 与 RSS 共用 | 只做粗粒度去标记，不是 Markdown 解析器 |
+| `src/utils/reading.js` | 字数统计与预计阅读时长（`countWords` / `readingMinutes`，中文按 350 字/分钟） | 文章页顶部展示，口径只在这里改 |
+| `src/utils/poem-card.js` | 笺纸卡片 canvas 渲染（`splitPoemGroups` / `renderPoemCard` / `canvasToPngBlob`） | 竖排、单句按标点断列；字体走系统字体栈，导出字形随本机字体变化 |
+| `src/components/PoemCardExport.vue` | 文章页底部「生成笺纸卡片」岛（下载 PNG / 复制图片） | 复制依赖 `ClipboardItem` + 安全上下文（https 或 localhost），失败会如实提示 |
+| `src/components/poetry/RhymeLookupDrawer.vue` | 填词页「韵书速查」抽屉：单字反查韵部 / 同韵字 / 跨韵书对照 | **复用** `poetry-engine/core/rhymeChecker.js` 的 `RHYME_BOOKS`，**不要**再 fetch 一次 JSON |
+| `src/pages/rss.xml.js` | RSS 2.0 订阅源（`/rss.xml`） | 链接 slug 必须用 `post.id` 推导（同第六节硬规则 7） |
+| `src/pages/posts/[slug].astro` 的字数与目录段 | 文章页「字数 · 预计阅读时长」+ 长文折叠目录 | 目录只在 `h2`/`h3` 合计 ≥ 3 时出现；当前 81 篇诗词都没有 `##` 标题，故通常不渲染 |
+| `public/robots.txt`、`public/og-default.png`、`scripts/make-og-image.py` | robots 声明；默认社交分享图（1200×630）及其生成脚本 | 生成脚本用 Pillow，**不是项目依赖**，只在需要重做图时手工跑一次 |
+| `astro.config.mjs` 的 `sitemap()` | 构建期生成 `sitemap-index.xml` / `sitemap-0.xml` | `/blog` 是 redirects 生成的跳转页，已在 filter 里排除 |
+
+两处配套改动：
+
+- `src/components/SearchModal.vue` 的 `goToPost` 改为动态 `import('astro:transitions/client')` 后调 `navigate()`，**不再整页跳转**；用动态 import 是因为该虚拟模块仅客户端可用，静态 import 会被构建期的 SSR 解析到，取用失败时回退整页跳转。
+- `scripts/publish.ps1` 的 `$required` 与线上 curl 校验表已加入 `rss.xml` / `robots.txt` / `sitemap-index.xml` / `og-default.png`。
