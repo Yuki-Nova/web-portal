@@ -234,7 +234,10 @@ if ($SkipBuild) {
 Step '产物断言'
 if (-not (Test-Path $distPath)) { Die 'dist 目录不存在，构建可能失败' }
 
-$required = @('index.html', '404.html', 'search-index.json', 'gallery.json', 'cipai.json')
+# 必备产物清单：新增前端入口（RSS / robots / sitemap / 分享图）时必须同步加到这里，
+# 否则构建不完整也能上线（2026-10-06 随 SEO 与 RSS 一起补齐）。
+$required = @('index.html', '404.html', 'search-index.json', 'gallery.json', 'cipai.json',
+    'rss.xml', 'robots.txt', 'sitemap-index.xml', 'og-default.png')
 foreach ($r in $required) {
     if (-not (Test-Path (Join-Path $distPath $r))) { Die ("产物缺少必要文件：" + $r) }
 }
@@ -421,6 +424,9 @@ if ($NoVerify) {
         @{ Path = '/archives/'; Expect = 200; Name = '文集编年' },
         @{ Path = '/search-index.json'; Expect = 200; Name = '检索索引' },
         @{ Path = '/gallery.json'; Expect = 200; Name = '相册快照' },
+        @{ Path = '/rss.xml'; Expect = 200; Name = 'RSS 订阅源' },
+        @{ Path = '/robots.txt'; Expect = 200; Name = 'robots 声明' },
+        @{ Path = '/sitemap-index.xml'; Expect = 200; Name = '站点地图' },
         @{ Path = '/no-such-page-xyz'; Expect = 404; Name = '404 页' }
     )
     if ($newestSlug) {
