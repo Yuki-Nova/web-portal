@@ -1,9 +1,14 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PoetryWorkbench from '../../components/poetry/PoetryWorkbench.vue';
+import RhymeLookupDrawer from '../../components/poetry/RhymeLookupDrawer.vue';
 ---
 
 <BaseLayout title="填词 · yuki's stop" description="153 个词牌，平仄与韵脚校验">
+  <!-- 韵书速查的触发按钮（右对齐）+ 就地 fixed 抽屉；单独成岛，与工作台互不干扰 -->
+  <div class="flex justify-end py-2">
+    <RhymeLookupDrawer client:only="vue" />
+  </div>
   <div class="py-2 sm:py-4">
     <PoetryWorkbench client:only="vue" />
   </div>
