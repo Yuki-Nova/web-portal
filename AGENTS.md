@@ -209,8 +209,9 @@ Astro 岛内使用 Vue 的 `<Teleport>` 会在 hydration 时破坏宿主 DOM（�
 |---|---|---|
 | `src/utils/excerpt.js` | 正文 → 单行纯文本摘要（`toExcerpt`），供 `meta description` 与 RSS 共用 | 只做粗粒度去标记，不是 Markdown 解析器 |
 | `src/utils/reading.js` | 字数统计与预计阅读时长（`countWords` / `readingMinutes`，中文按 350 字/分钟） | 文章页顶部展示，口径只在这里改 |
-| `src/utils/poem-card.js` | 笺纸卡片 canvas 渲染（`splitPoemGroups` / `renderPoemCard` / `canvasToPngBlob`） | 竖排、单句按标点断列；字体走系统字体栈，导出字形随本机字体变化 |
-| `src/components/PoemCardExport.vue` | 文章页底部「生成笺纸卡片」岛（下载 PNG / 复制图片） | 复制依赖 `ClipboardItem` + 安全上下文（https 或 localhost），失败会如实提示 |
+| `src/utils/poem-card.js` | 笺纸卡片 canvas 渲染（`splitPoemGroups` / `splitGroupsFromHtml` / `renderPoemCard` / `canvasToPngBlob`） | 竖排、单句按标点断列；**每幅最多 10 列（`BAND_COLUMNS`），超出的长调换下一幅**——不分幅时《水龙吟》会排成 2486px 宽的窄带；卡片宽度按标题实测字宽兜底，防止长标题被裁；字体走系统字体栈，导出字形随本机字体变化 |
+| `src/components/PoemCardPanel.vue` | 卡片「预览 + 下载 + 复制」面板（自己没有触发按钮） | 文章页与诗词墙两个入口共用；`watch(title/groups)` 在新诗上重画；复制依赖 `ClipboardItem` + 安全上下文（https 或 localhost），失败会如实提示 |
+| `src/components/PoemCardExport.vue` + `PoetryWall.vue` 的「卡片」按钮 | 两个导出入口：文章页就地展开预览；诗词墙用就地 `fixed` 浮层（`z-[150]`，高于图片 lightbox 的 `z-50`） | 诗词墙数据是**单卡片轮播**，正文来自 `src/data/poetry-wall.json` 的 `content` 字段（HTML，故走 `splitGroupsFromHtml`，与文章页的 markdown 入口分开）。浮层必须留在 `.poetry-wall-wrapper` 内且**不在** `overflow-hidden` 的那张 poem 卡片里，并继续禁止 `<Teleport>` |
 | `src/components/poetry/RhymeLookupDrawer.vue` | 填词页「韵书速查」抽屉：单字反查韵部 / 同韵字 / 跨韵书对照 | **复用** `poetry-engine/core/rhymeChecker.js` 的 `RHYME_BOOKS`，**不要**再 fetch 一次 JSON |
 | `src/pages/rss.xml.js` | RSS 2.0 订阅源（`/rss.xml`） | 链接 slug 必须用 `post.id` 推导（同第六节硬规则 7） |
 | `src/pages/posts/[slug].astro` 的字数与目录段 | 文章页「字数 · 预计阅读时长」+ 长文折叠目录 | 目录只在 `h2`/`h3` 合计 ≥ 3 时出现；当前 81 篇诗词都没有 `##` 标题，故通常不渲染 |
