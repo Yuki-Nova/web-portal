@@ -198,7 +198,7 @@ Astro 岛内使用 Vue 的 `<Teleport>` 会在 hydration 时破坏宿主 DOM（�
 - **PowerShell here-string 管道进 `ssh "bash -s"` 会带 CRLF**，远端把 `\r` 当命令的一部分（实测 `xargs` 报 `md5sum\r: No such file or directory`、`tail -1` 报 `option used in invalid context`）。`publish.ps1` 的 `Invoke-Remote` 统一 `-replace "\r",""` 后再发送，改这段时不要去掉。
 - **Windows 版 `bsdtar` 会把 Windows 的文件模式写进归档**（目录 777、文件 666），GNU tar 解压时照搬，线上权限被放宽（2026-10-05 首次实跑即把全站从 755/644 变成 777/666）。因此远端脚本解压后必须 `find -type d -exec chmod 755` + `find -type f -exec chmod 644` 再 `chown www:www`，这三步不能省。发布后可用 `find <站点根> -type d -printf '%m\n' | sort | uniq -c` 与 `-type f` 版核对：目录应全为 755、文件应全为 644（**具体个数随文章增减变化，不要记死数字**；2026-10-04 那次是 108 个目录、126 个文件）。
 - **远端清单过滤必须 `grep -v '^$'`**：`tar` 的根条目 `./` 经 `sed 's|^\./||'` 后是空行，不滤掉会让 `comm` 误报「缺失 1 个文件」。
-- **`scripts/publish.ps1` 必须保存为 UTF-8 with BOM**：Windows PowerShell 5.1 没有 BOM 时按系统 ANSI 代码页解码整个文件，中文被解错后直接抛 **60 个解析错误**（`Unexpected token '}'`），脚本完全无法运行（2026-10-04 实测）。用编辑器另存时注意别把 BOM 丢掉；`pwsh` 7 不受影响，所以只用 7 测试会漏掉这个坑。
+- **`scripts/publish.ps1` 必须保存为 UTF-8 with BOM**：Windows PowerShell 5.1 没有 BOM 时按系统 ANSI 代码页解码整个文件，中文被解错后直接抛 **60 个解析错误**（`Unexpected token '}'`），脚本完全无法运行（2026-10-04 实测）。用编辑器另存时注意别把 BOM 丢掉；`pwsh` 7 不受影响，所以只用 7 测试会漏掉这个坑。**2026-10-06 补充实测：程序化改写（本机用的编辑工具）会静默吃掉 BOM**，改完必须验字节：`[System.IO.File]::ReadAllBytes($p)[0..2]` 应为 `239,187,191`；并用 `powershell.exe -NoProfile` 跑一次 `Parser::ParseFile` 复核（PS 5.1 才是暴露这个坑的引擎）。
 - **任何会写文件的步骤都要在 `-DryRun` 下跳过**：`publish.ps1` 步骤 1 会跑 `sync-poetry-wall.mjs` 重写 `src/data/poetry-wall.json`，曾因缺 `-not $DryRun` 守卫让 dry-run 改动了工作区（2026-10-04 实测 mtime 变化）。
 
 **本机依赖**：Node 24 + `npm`、`git`、系统 `tar`/`curl`、`ssh`/`scp`（OpenSSH 9.5）。**本机没有 `rsync`**，所以是全量发布（当前 126 个文件 / tar 约 490 KB，上传约 1 秒）。
