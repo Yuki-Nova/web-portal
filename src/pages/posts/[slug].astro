@@ -1,8 +1,10 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PoemCardExport from '../../components/PoemCardExport.vue';
 import { toExcerpt } from '../../utils/excerpt.js';
 import { countWords, readingMinutes } from '../../utils/reading.js';
+import { splitPoemGroups } from '../../utils/poem-card.js';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -51,6 +53,9 @@ const minutes = readingMinutes(charCount);
 // `##` 小节标题时它会自动出现，不需要再改这里。
 const tocItems = (headings ?? []).filter((h) => h.depth === 2 || h.depth === 3);
 const showToc = tocItems.length >= 3;
+
+// 笺纸卡片导出的竖排正文（只切分、不改字；标点保留在每列末尾）
+const poemGroups = splitPoemGroups(post.body);
 ---
 
 <BaseLayout
@@ -144,6 +149,16 @@ const showToc = tocItems.length >= 3;
 
       </footer>
     </article>
+
+    <!-- 笺纸卡片导出（客户端岛：canvas 渲染 + 下载/复制）。
+         用 client:visible —— 它在首屏之下，滚到才 hydration，不拖首屏。 -->
+    <PoemCardExport
+      client:visible
+      title={post.data.title}
+      groups={poemGroups}
+      date={formatDate(post.data.date)}
+      tags={post.data.tags ?? []}
+    />
 
     <!-- 上一篇 / 下一篇（与旧站 post.njk 的 prev/next 导航对应） -->
     {(prev || next) && (
