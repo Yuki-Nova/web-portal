@@ -1,0 +1,6 @@
+# https://yukinova.top
+# 站点是纯静态产物，全部页面欢迎收录；sitemap 由 @astrojs/sitemap 在构建期生成。
+User-agent: *
+Allow: /
+
+Sitemap: https://yukinova.top/sitemap-index.xml
