@@ -259,6 +259,13 @@
             >
               {{ copied ? '已复制' : '复制' }}
             </button>
+            <button
+              @click="cardOpen = true"
+              class="hover:text-seal transition-colors font-serif"
+              title="把这一首生成笺纸卡片（可下载 / 复制成图片）"
+            >
+              卡片
+            </button>
           </div>
         </div>
         </div>
@@ -354,11 +361,40 @@
         </p>
       </div>
     </div>
+
+    <!-- 笺纸卡片浮层：就地 fixed 定位（本项目禁止 Vue <Teleport>，见 AGENTS.md 坑点五），
+         层级高于图片 lightbox 的 z-50。卡片本体与下载/复制逻辑复用 PoemCardPanel。 -->
+    <div
+      v-if="cardOpen && currentPoem"
+      class="fixed inset-0 z-[150] flex items-start justify-center overflow-y-auto bg-black/60 p-4"
+      @click.self="cardOpen = false"
+    >
+      <div class="paper-card w-full max-w-lg my-8 p-5">
+        <div class="flex items-baseline justify-between mb-3">
+          <h3 class="font-serif text-sm text-ink">笺纸卡片 · {{ currentPoem.title }}</h3>
+          <button
+            type="button"
+            class="text-xs font-serif text-ink-muted hover:text-ink transition-colors"
+            @click="cardOpen = false"
+          >
+            关闭
+          </button>
+        </div>
+        <PoemCardPanel
+          :title="currentPoem.title"
+          :groups="cardGroups"
+          :date="currentPoem.date"
+          :tags="cardTags"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import PoemCardPanel from './PoemCardPanel.vue';
+import { splitGroupsFromHtml } from '../utils/poem-card.js';
 
 const props = defineProps({
   poems: {
@@ -371,6 +407,8 @@ const selectedCategory = ref('全部');
 const selectedTag = ref('全部');
 const currentIndex = ref(0);
 const copied = ref(false);
+// 笺纸卡片浮层开关（卡片本体是 PoemCardPanel）
+const cardOpen = ref(false);
 
 // Lightbox state
 const isLightboxOpen = ref(false);
@@ -465,6 +503,10 @@ const poemParsed = computed(() => {
 
   return { textHtml: cleanHtml, images };
 });
+
+// 笺纸卡片用的竖排组：诗词墙的数据是 HTML（<p>/<br>），故走 splitGroupsFromHtml
+const cardGroups = computed(() => splitGroupsFromHtml(poemParsed.value.textHtml));
+const cardTags = computed(() => currentPoem.value?.tags || []);
 
 const onImageError = (src) => {
   failedImages.value.add(src);
