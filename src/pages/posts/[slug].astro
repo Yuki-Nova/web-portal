@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { toExcerpt } from '../../utils/excerpt.js';
+import { countWords, readingMinutes } from '../../utils/reading.js';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -25,7 +26,7 @@ export async function getStaticPaths() {
 }
 
 const { post, prev, next } = Astro.props;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
 
 const slugOf = (p: { id: string }) => encodeURIComponent(p.id.replace(/\.md$/, ''));
 
@@ -40,6 +41,16 @@ const formatDate = (d?: string | Date) => {
 
 // 摘要：与 RSS 订阅源共用同一套口径（src/utils/excerpt.js）
 const excerpt = toExcerpt(post);
+
+// 字数与阅读时长（src/utils/reading.js）
+const { total: charCount } = countWords(post);
+const minutes = readingMinutes(charCount);
+
+// 长文目录：只收 h2/h3（h1 即标题本身，h4 以下太碎）。
+// 当前 81 篇诗词都没有 markdown 标题，因此通常不渲染；等长文（辞赋/杂感）开始用
+// `##` 小节标题时它会自动出现，不需要再改这里。
+const tocItems = (headings ?? []).filter((h) => h.depth === 2 || h.depth === 3);
+const showToc = tocItems.length >= 3;
 ---
 
 <BaseLayout
@@ -58,6 +69,29 @@ const excerpt = toExcerpt(post);
       </a>
     </div>
 
+    <!-- 长文折叠目录：小节标题 ≥3 个才出现。当前 81 篇诗词都没有 markdown 标题，
+         所以通常不渲染；等辞赋/杂感开始用 `##` 分节时自动生效。 -->
+    {showToc && (
+      <details class="paper-card px-5 py-4 mb-6 group">
+        <summary class="cursor-pointer list-none flex items-center justify-between text-xs font-serif text-ink-muted hover:text-seal transition-colors">
+          <span>目录 · 共 {tocItems.length} 节</span>
+          <span class="font-mono transition-transform group-open:rotate-90">▸</span>
+        </summary>
+        <ul class="mt-3 space-y-1.5">
+          {tocItems.map((h) => (
+            <li class={h.depth === 3 ? 'pl-5' : ''}>
+              <a
+                href={`#${h.slug}`}
+                class="text-sm font-serif text-ink-muted hover:text-seal no-underline transition-colors"
+              >
+                {h.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </details>
+    )}
+
     <!-- 居中单栏正文（原先的右栏个人信息卡与目录已移除） -->
     <article
       class="paper-card p-6 sm:p-12 relative overflow-hidden min-h-[460px] sm:min-h-[520px] flex flex-col justify-between transition-all duration-300"
@@ -73,6 +107,9 @@ const excerpt = toExcerpt(post);
         <header class="border-b border-border-paper pb-6 mb-8 text-center sm:text-left">
           <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs font-mono text-ink-muted mb-3">
             <span>{formatDate(post.data.date)}</span>
+            {charCount > 0 && (
+              <span class="text-ink-faint">{charCount} 字 · 约 {minutes} 分钟</span>
+            )}
             {post.data.categories?.map((cat) => (
               <a href={`/categories/${encodeURIComponent(cat)}/`} class="px-2 py-0.5 rounded bg-black/5 dark:bg-white/5 font-serif text-[11px] text-ink-muted hover:text-seal no-underline">
                 {cat}
