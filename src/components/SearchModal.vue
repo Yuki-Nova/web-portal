@@ -202,9 +202,20 @@ const selectCurrent = () => {
   }
 };
 
-const goToPost = (slug) => {
+const goToPost = async (slug) => {
+  const url = `/posts/${encodeURIComponent(slug)}`;
   closeModal();
-  window.location.href = `/posts/${encodeURIComponent(slug)}`;
+  // 走 Astro 客户端路由（ClientRouter），避免整页硬刷新打断全站 View Transitions。
+  // `astro:transitions/client` 是**仅客户端**的虚拟模块，故用动态 import：
+  // 静态 import 会被 SSR 阶段解析，而本组件在构建期会被服务端渲染一次。
+  // 动态取用失败（例如 ClientRouter 未加载）时退回整页跳转，保证搜索功能永远可用。
+  try {
+    const { navigate } = await import('astro:transitions/client');
+    await navigate(url);
+  } catch (err) {
+    console.error('[SearchModal] 客户端路由跳转失败，回退整页跳转:', err);
+    window.location.href = url;
+  }
 };
 
 // Header 的搜索按钮派发的打开请求
