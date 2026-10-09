@@ -1,5 +1,8 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import PoemFortune from '../components/PoemFortune.vue';
+import quoteData from '../data/poem-quotes.json';
 
 // 门户入口。首页不再自带独立 HTML 骨架，统一走 BaseLayout（顶部导航 + 页脚）。
 const entries = [
@@ -9,6 +12,30 @@ const entries = [
   { label: '归档', desc: '按年排列', href: '/archives' },
   { label: 'GitHub', desc: '源码与项目', href: 'https://github.com/Yuki-Nova', external: true },
 ];
+
+/**
+ * 抽诗签数据（Task 3.1）。
+ *
+ * slug 必须用内容集合的真实 id —— 与 src/pages/poems/index.astro 同一口径
+ * （AGENTS.md 硬规则 7）。**不要**改用 poetry-wall.json 的 slug 字段：
+ * 实测它只有 42/81 命中 dist/posts/ 的真实目录名（Eden → eden、
+ * 永遇乐.voyager_01 → 永遇乐voyager_01、登阁.别南苑既久 → 登阁别南苑既久），
+ * 2026-10-04 的 39/81 死链事故就是这么来的。
+ */
+const posts = await getCollection('blog');
+const slugByTitle = new Map(
+  posts.map((post) => [post.data.title, post.id.replace(/\.md$/, '')])
+);
+
+const fortunePoems = quoteData.reduce((list, item) => {
+  const slug = slugByTitle.get(item.title);
+  if (!slug) {
+    console.warn(`[index] 金句条目在 src/content/blog/ 里找不到同名文章，已跳过：${item.title}`);
+    return list;
+  }
+  list.push({ title: item.title, quote: item.quote, slug });
+  return list;
+}, []);
 ---
 
 <BaseLayout title="Yuki-Nova · 个人名片" description="Yuki-Nova">
@@ -39,6 +66,7 @@ const entries = [
           target={entry.external ? '_blank' : undefined}
           rel={entry.external ? 'noopener noreferrer' : undefined}
           class="paper-card p-4 sm:p-5 no-underline group"
+          data-tilt
         >
           <div class="font-serif font-semibold text-sm text-ink group-hover:text-seal transition-colors flex items-center justify-between gap-2">
             <span>{entry.label}</span>
@@ -49,4 +77,9 @@ const entries = [
       ))}
     </div>
   </div>
+
+  <!-- 拈阄·抽诗签（Task 3.1）。刻意放在上面那个 animate-fade-in 容器**之外**：
+       该动画的 keyframes 带 transform，会让内部 fixed 定位相对容器计算（首屏动画结束后
+       transform 仍是 translateY(0) 而非 none，包含块一直存在）。 -->
+  <PoemFortune client:idle poems={fortunePoems} />
 </BaseLayout>

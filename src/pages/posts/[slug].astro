@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PoemCardExport from '../../components/PoemCardExport.vue';
+import ReadingSeal from '../../components/ReadingSeal.vue';
 import { toExcerpt } from '../../utils/excerpt.js';
 import { countWords, readingMinutes } from '../../utils/reading.js';
 import { splitPoemGroups } from '../../utils/poem-card.js';
@@ -159,6 +160,11 @@ const poemGroups = splitPoemGroups(post.body);
       date={formatDate(post.data.date)}
       tags={post.data.tags ?? []}
     />
+
+    <!-- 阅读进度印章（Task 4.1）：fixed 右下角，滚动注墨、点击回顶。
+         必须放在正文 article 之外 —— article 带 transition:name（换页过渡快照），
+         且 [data-tilt] 之类的 transform 会改变 fixed 的包含块。 -->
+    <ReadingSeal client:idle />
 
     <!-- 上一篇 / 下一篇（与旧站 post.njk 的 prev/next 导航对应） -->
     {(prev || next) && (
