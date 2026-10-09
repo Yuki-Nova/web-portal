@@ -43,6 +43,55 @@
   border-color: rgba(166, 27, 41, 0.18);
 }
 
+/* ── 宣纸卡片 3D 微倾与反光 ──
+ * 由 src/scripts/paper-tilt.js 给 [data-tilt] 元素写 --tilt-x / --tilt-y 与
+ * --sheen-x / --sheen-y / --sheen-opacity；未启用（触屏、减弱动效、无 JS）时
+ * 变量取默认值 0deg / 0，元素与普通 .paper-card 完全一致。
+ * 注意：transform 会创建包含块，不要在 [data-tilt] 内部放 fixed 弹层。
+ */
+[data-tilt] {
+  position: relative;
+  transform: perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  /* 覆盖 .paper-card 的 0.25s：移出复位用更从容的曲线 */
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s ease;
+}
+
+/* 指针在卡片内：位移要跟手，用更短的过渡 */
+[data-tilt].is-tilting {
+  transition: transform 0.08s linear,
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.25s ease;
+}
+
+/* 纸张纤维光泽：径向微光，位置与强度由 JS 变量驱动 */
+[data-tilt]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--sheen-opacity, 0);
+  transition: opacity 0.3s ease;
+  background: radial-gradient(
+    circle 420px at var(--sheen-x, 50%) var(--sheen-y, 50%),
+    rgb(var(--sheen-rgb) / 0.5),
+    rgb(var(--sheen-rgb) / 0) 70%
+  );
+  mix-blend-mode: soft-light;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tilt] {
+    transform: none;
+    transition: none;
+  }
+  [data-tilt]::after {
+    display: none;
+  }
+}
+
 /* 朱砂印印章徽标 */
 .seal-badge {
   display: inline-flex;

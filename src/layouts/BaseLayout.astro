@@ -2,6 +2,7 @@
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import SearchModal from '../components/SearchModal.vue';
+import YukiSnow from '../components/YukiSnow.vue';
 import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 
@@ -110,8 +111,15 @@ const SITE_NAME = "yuki's stop";
     </script>
   </head>
   <body class="bg-canvas text-ink antialiased min-h-screen flex flex-col font-sans transition-colors duration-200">
+    <!-- 随风碎雪背景层（Task 5.1）：fixed + z-0 + pointer-events:none，
+         不接管任何鼠标事件。main / footer 只加 position:relative（**不要**加 z-index）：
+         它们与雪层同属「定位元素」这一绘制层，靠 DOM 顺序即可压在雪层之上；
+         一旦给 main 加 z-index，就会建出层叠上下文，把内部的固定挂件
+         （如文章页的阅读印章 z-40）关在里面，反被排在后面的 footer 盖住。 -->
+    <YukiSnow client:idle />
+
     <Header currentPath={currentPath} />
-    <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <main class="relative flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <slot />
     </main>
     <Footer />
@@ -120,5 +128,13 @@ const SITE_NAME = "yuki's stop";
         才能用 fixed 覆盖全屏），且不能用 Vue 的 Teleport —— 见 AGENTS.md 坑点一。
         触发按钮在 Header 内（SearchTrigger），通过 shiro:open-search 事件通信。 */}
     <SearchModal client:idle />
+
+    <!-- 装饰性交互脚本（落印涟漪 Task 1.1 / 游丝光标 Task 1.2 / 宣纸微倾 Task 2.1+2.2）。
+         Astro 会把这些 `<script src="...">` 作为模块打包，**每个页面只执行一次**；
+         ClientRouter 换页时模块不重跑，页面级初始化统一走 motion.js 的 onPageLoad()。
+         触屏与 prefers-reduced-motion 下各自静默降级，不做任何注册。 -->
+    <script src="../scripts/stamp-ripple.js"></script>
+    <script src="../scripts/paper-tilt.js"></script>
+    <script src="../scripts/ink-cursor.js"></script>
   </body>
 </html>

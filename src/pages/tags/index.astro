@@ -42,6 +42,7 @@ const sortedTags = Object.keys(tagMap).sort((a, b) => tagMap[b] - tagMap[a]);
         <a
           href={`/tags/${encodeURIComponent(tag)}/`}
           class="paper-card p-5 no-underline group flex items-center justify-between gap-3"
+          data-tilt
         >
           <span class="font-serif font-semibold text-sm text-ink group-hover:text-seal transition-colors">
             <span class="text-seal text-[10px] mr-1">#</span>{tag}

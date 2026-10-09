@@ -32,6 +32,11 @@
   --color-seal-soft: rgba(166, 27, 41, 0.08);
   --color-seal-border: rgba(166, 27, 41, 0.25);
 
+  /* ── 宣纸反光（卡片 3D 微倾时的纤维光泽）──
+   * 只被 global.css 的 [data-tilt]::after 以 rgb(var(--sheen-rgb) / a) 消费，
+   * 纯 CSS 直引，不参与 Tailwind 透明度修饰符。 */
+  --sheen-rgb: 255 255 255;
+
   /* ── 麦穗流金（学术工作台专用）── */
   --color-amber: #c68a36;
   --color-amber-rgb: 198 138 54;
@@ -91,6 +96,9 @@
   --color-seal-rgb: 224 82 86;
   --color-seal-soft: rgba(224, 82, 86, 0.12);
   --color-seal-border: rgba(224, 82, 86, 0.3);
+
+  /* ── 宣纸反光（玄墨态改用偏暖的月白，避免白斑过于刺眼）── */
+  --sheen-rgb: 226 223 215;
 
   /* ── 麦穗流金 ── */
   --color-amber: #d4a359;

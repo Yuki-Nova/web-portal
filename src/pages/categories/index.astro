@@ -44,6 +44,7 @@ const sortedCategories = Object.keys(categoryMap).sort(
         <a
           href={`/categories/${encodeURIComponent(cat)}/`}
           class="paper-card p-5 no-underline group flex items-center justify-between gap-3"
+          data-tilt
         >
           <span class="font-serif font-semibold text-sm text-ink group-hover:text-seal transition-colors">
             {cat}
