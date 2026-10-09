@@ -92,6 +92,77 @@
   }
 }
 
+/* ── 水墨游丝光标画布（Task 1.2） ──
+ * 静态纳入 global.css，确保 ClientRouter 换页时不被 <head> 替换抹除样式，
+ * 彻底杜绝子页面上光标因缺少 position: fixed 降级为 static 产生的垂直错位。
+ */
+#shiro-ink-cursor {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  /* 高于全部弹层（z-150）与吸顶导航（z-50） */
+  z-index: 160;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #shiro-ink-cursor {
+    display: none;
+  }
+}
+
+/* ── 朱砂落印点击涟漪（Task 1.1） ── */
+.shiro-ripple {
+  position: fixed;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 45;
+}
+
+.shiro-ripple__ring {
+  position: absolute;
+  left: -7px;
+  top: -7px;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--color-seal-rgb) / 0.32);
+  background: radial-gradient(circle, rgb(var(--color-seal-rgb) / 0.14), rgb(var(--color-seal-rgb) / 0) 70%);
+  animation: shiro-ripple-ring 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.shiro-ripple__seal {
+  position: absolute;
+  left: 7px;
+  top: 7px;
+  padding: 2px 3px;
+  border: 1px solid rgb(var(--color-seal-rgb) / 0.28);
+  border-radius: 2px;
+  font-family: var(--font-serif, serif);
+  font-size: 10px;
+  line-height: 1;
+  color: rgb(var(--color-seal-rgb) / 0.5);
+  opacity: 0;
+  animation: shiro-ripple-seal 400ms ease-out forwards;
+}
+
+@keyframes shiro-ripple-ring {
+  from { transform: scale(0.35); opacity: 0.95; }
+  to   { transform: scale(4.2);  opacity: 0; }
+}
+
+@keyframes shiro-ripple-seal {
+  0%   { opacity: 0;   transform: scale(0.82) rotate(-6deg); }
+  35%  { opacity: 0.9; }
+  100% { opacity: 0;   transform: scale(1.02) rotate(-2deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shiro-ripple {
+    display: none;
+  }
+}
+
 /* 朱砂印印章徽标 */
 .seal-badge {
   display: inline-flex;

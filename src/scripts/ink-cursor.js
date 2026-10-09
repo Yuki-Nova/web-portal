@@ -110,6 +110,11 @@ function ensureCanvas() {
     element = document.createElement('canvas');
     element.id = CANVAS_ID;
     element.setAttribute('aria-hidden', 'true');
+    // 双保险：即便 CSS 被任何异常情况阻断，内联样式依然强制锁定全屏 fixed，杜绝垂直偏移
+    element.style.position = 'fixed';
+    element.style.inset = '0';
+    element.style.pointerEvents = 'none';
+    element.style.zIndex = '160';
     document.body.appendChild(element);
   }
   canvas = element;
@@ -276,8 +281,12 @@ function disable() {
 }
 
 onPageLoad(() => {
-  if (decorationEnabled()) enable();
-  else disable();
+  if (decorationEnabled()) {
+    enable();
+    ensureCanvas();
+  } else {
+    disable();
+  }
 });
 
 // 用户中途切换系统偏好时实时生效。
