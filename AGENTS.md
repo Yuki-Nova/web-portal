@@ -95,7 +95,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   - `src/components/SearchModal.vue`：**去掉 `<Teleport>`**，改由 `BaseLayout.astro` 挂到 `<Footer />` 之后的 body 末尾，直接以 `fixed inset-0` 覆盖全屏（不在 `backdrop-blur` 容器内，无需 Teleport），并监听上述事件。
 
   **不要**把弹窗挪回 Header，也**不要**再加回 `<Teleport>`。若将来确需 Teleport，先跑上表的隔离实验确认。
-- **回归要点**：`agent-browser eval 'Array.from(document.body.children).map(e=>e.tagName).join(",")'` 应为 `HEADER,MAIN,FOOTER,SCRIPT,ASTRO-ISLAND`；`document.querySelectorAll("astro-island").length` 在 `/poetry` 页**当前为 5**（Header 内 2 + body 末尾搜索弹窗 1 + 填词工作台 1 + 韵书速查 1；2026-10-06 新增韵书速查后由 4 变 5）。**岛数会随功能增减而变化，不要把某个数字当判据**——真正的判据是 `body.children` 结构完好、且与实际岛数一致；`agent-browser errors` 应为空；点击 Header 第二个按钮后 `input[placeholder]` 存在且输入关键词能出结果。
+- **回归要点**：`agent-browser eval 'Array.from(document.body.children).map(e=>e.tagName).join(",")'` 在首页应包含 `HEADER,MAIN,FOOTER` 且顺序正确；`document.querySelectorAll("astro-island").length` 在 `/poetry` 页**当前为 5**（Header 内 2 + body 末尾搜索弹窗 1 + 填词工作台 1 + 韵书速查 1；2026-10-06 新增韵书速查后由 4 变 5），其他页面已经是另一套数字：BaseLayout 的 `YukiSnow` 与 Footer 的飘雪开关（2026-10-09 新增）让**每一页**都 +2，首页另有抽诗签、文章页另有阅读印章。**岛数会随功能增减而变化，不要把某个数字当判据**——真正的判据是 `body.children` 结构完好、且与实际岛数一致；注意 body 末尾本来就还有 Astro 自带的 `astro-route-announcer`（DIV）与游丝 canvas（`#shiro-ink-cursor`），它们不是岛。`agent-browser errors` 应为空；点击 Header 第二个按钮后 `input[placeholder]` 存在且输入关键词能出结果。
 
 ### 2. 大块数据不要内联进岛的 props（**已修**，2026-10-03）
 
@@ -162,6 +162,22 @@ Astro 岛内使用 Vue 的 `<Teleport>` 会在 hydration 时破坏宿主 DOM（�
 
    期望 `HEADER,MAIN,FOOTER`。**只看 `Invoke-WebRequest` 的 HTML 会漏掉客户端删 DOM 这类问题。**
 
+4. 装饰性动效的验收断言（`agent-browser` 0.34.0，viewport 1264×569；本机 headless 实测 rAF ≈ 145fps）：
+
+   | 断言对象 | 判据 |
+   |---|---|
+   | 落印涟漪 | `window.__shiroRippleCount` 递增、`.shiro-ripple` 节点 400ms 内自毁；点击 `button`/`a` **不**计数 |
+   | 宣纸微倾 | 真实鼠标移到卡片偏角后 `el.style.getPropertyValue('--tilt-x')` 非空（≤4deg），移出后清空且 `is-tilting` 移除 |
+   | 游丝光标 | 移动时 `__shiroInkCursor.points > 0`，静止约 1s 后归 0；`#shiro-ink-cursor` 只有一个 |
+   | 抽诗签 | 浮层 `data-slug` 必须能在 `dist/posts/` 找到同名目录（应 81/81），`前往品读` 的 href 是 `encodeURIComponent(post.id)` |
+   | 阅读印章 | 滚到底 `data-progress` 为 100，点击后 `scrollY === 0`，页底 `elementFromPoint` 命中印章而非 footer |
+   | 随风碎雪 | `__shiroSnow.active/count`、雪花坐标随时间变化、canvas `z-index:0` 且 `pointer-events:none`；页脚开关写 `localStorage['yuki-snow']` |
+   | 降级 | `agent-browser set media dark reduced-motion` 后：游丝 canvas 为 0、`--tilt-x` 不被写入、涟漪计数不动、雪 `active:false`；`set media dark` 复原后应**不刷新**即自动恢复 |
+
+   **注意**：`agent-browser set device` 的设备预设（iPhone 15/Pixel 9 等）只改视口与 UA，**改不了 `hover`/`pointer` 媒体特性**——headless 下 `(hover: hover) and (pointer: fine)` 恒为 true，触屏分支无法用它验证。可行做法是注入 `window.matchMedia` 桩（对 `hover: hover`/`pointer: fine` 返回 `matches:false`）后做一次客户端导航，让 `onPageLoad` 重新判定门禁。
+
+5. 换页兼容：点击导航换页后 `body.children` 结构与实际岛数一致、`#shiro-ink-cursor` 与 `.yuki-snow` 各只有 1 个、`agent-browser errors` 为空。
+
 ## 五、边界
 
 - `dist/`、`node_modules/`、`.astro/` 已在 `.gitignore`，不要提交。
@@ -222,3 +238,29 @@ Astro 岛内使用 Vue 的 `<Teleport>` 会在 hydration 时破坏宿主 DOM（�
 
 - `src/components/SearchModal.vue` 的 `goToPost` 改为动态 `import('astro:transitions/client')` 后调 `navigate()`，**不再整页跳转**；用动态 import 是因为该虚拟模块仅客户端可用，静态 import 会被构建期的 SSR 解析到，取用失败时回退整页跳转。
 - `scripts/publish.ps1` 的 `$required` 与线上 curl 校验表已加入 `rss.xml` / `robots.txt` / `sitemap-index.xml` / `og-default.png`。
+
+## 八、2026-10-09 新增的装饰性交互层
+
+规划与逐项验收清单见 [TODO-INTERACTIVE.md](TODO-INTERACTIVE.md)（8 个任务全部完成）。
+
+| 新增 | 作用 | 注意 |
+|---|---|---|
+| `src/scripts/motion.js` | **唯一**的降级判定与换页生命周期入口：`finePointer()` / `prefersReducedMotion()` / `decorationEnabled()` / `onPageLoad()` / `onBeforeSwap()` / `createRafLoop()` / `watchDecoration()` / `fitCanvas()` / `cssRgb()` | 由 BaseLayout 以 `<script src>` 引入 → Astro 打包成模块，**每页只执行一次**、换页不重跑；模块级代码不能假设会重跑，页面级初始化一律走 `onPageLoad()` |
+| `src/scripts/stamp-ripple.js` | 落印涟漪（Task 1.1） | 只在 document 上注册一次；跳过 `a/button/input/summary/[role=button]` 等交互元素与 `[data-no-ripple]`；120ms 节流；样式随脚本注入（无 JS 时零成本），`z-index:45` 低于吸顶导航与所有弹层 |
+| `src/scripts/ink-cursor.js` | 水墨游丝光标（Task 1.2） | **保留系统原生光标**（用户拍板），游丝只是拖尾 canvas（`#shiro-ink-cursor`，`z-index:160`、`pointer-events:none`）；换页后 body 子节点被替换，靠 `canvas.isConnected` 在下一帧补挂；关闭时连节点一起摘掉 |
+| `src/scripts/paper-tilt.js` | 宣纸 3D 微倾 + 反光（Task 2.1/2.2） | 只写 CSS 变量（`--tilt-x/--tilt-y/--sheen-x/--sheen-y/--sheen-opacity`），位移与微光由 `global.css` 的 `[data-tilt]` 消费；目标是首页 5 入口卡 + `/categories` + `/tags` 索引卡——**不含** `/archives`（那里单篇是裸 `<article>` 行，只有年份区块是 `paper-card`） |
+| `src/components/PoemFortune.vue` + `src/data/poem-quotes.json` | 拈阄·抽诗签（Task 3.1） | 首页右下角触发；浮层**就地 fixed**（禁 Teleport），必须挂在没有 `transform/filter/backdrop-filter` 的祖先下——首页那个 `animate-fade-in` 容器**不能**包它（keyframes 带 transform，包含块会一直存在）。slug 规则见下方第 6 条 |
+| `src/components/ReadingSeal.vue` | 朱砂印阅读进度 + 点击回顶（Task 4.1） | `data-progress` 同时供无障碍标签与浏览器断言；`prefers-reduced-motion` 下回顶退化为瞬时跳转 |
+| `src/components/YukiSnow.vue` + `SnowToggle.vue` + `src/scripts/snow-state.js` | 随风碎雪 + 页脚开关（Task 5.1） | 雪层 `fixed z-0` + `pointer-events:none`；开关存 `localStorage['yuki-snow']`（默认开启）；`snow-state.js` 是两个岛之间的**唯一**状态源 |
+
+### 本轮新增的硬规则与坑点（都踩过并有实测证据）
+
+1. **禁止把两条媒体查询合并成一次 `matchMedia`**。`matchMedia('(a), (b)')` 的 `matches` 是「任一命中」，`change` 只在整体布尔值翻转时触发：精细指针恒为真时，单独切换 `prefers-reduced-motion` 不会让它翻转——实测一次开/关切换收到 **0** 个 change 事件（两条单一查询各 1 个），降级与恢复**双向失效**。统一用 `watchDecoration()`。
+2. **按帧推进的位移/衰减必须按帧间隔换算**。本机 headless Chrome 实测 rAF 为 **145fps**；按帧写死会让高刷屏上雪下得快 2.4 倍、游丝 138ms 就消失。基准取 `1000/60`，并把 `dt` 夹在 64ms 内（防后台切回时一帧跳出屏幕）。
+3. **不要给 `main` / `footer` 加 `z-index`**。雪层是 `fixed z-0`，`main`/`footer` 只要 `position: relative` 就能靠 DOM 顺序压在它上面；一旦加 `z-index` 就会建出层叠上下文，把内部 `fixed` 挂件（阅读印章 `z-40`）关在里面，反被排在后面的 footer 盖住（实测：页底 `elementFromPoint` 命中 footer，点击直接失败）。
+4. **游丝清空后不能靠「数组末项」判断是否追加点**。数组被清空时 `!last` 恒真，会每帧补推一个新点，`points` 永远在 0/1 之间循环、收不干净。改与独立的 `lastPushX/Y` 比较。
+5. **昼间态碎雪必须靠墨边勾轮廓**。纯白填充在 `#f9f8f5` 宣纸上不可见；且 canvas 的 `globalAlpha` 被填充与描边共用，若描边沿用填充的透明度（0.28~0.73），0.22 的墨边再乘一次只剩不到 5%。描边要用独立的 `globalAlpha`。
+6. **`poem-quotes.json` 只存 `title` + `quote`，slug 必须构建期映射**：`poetry-wall.json` 的 `slug` 字段**只有 42/81 命中**真实 `dist/posts/` 目录名（`Eden`→`eden`、`永遇乐.voyager_01`→`永遇乐voyager_01`、`登阁.别南苑既久`→`登阁别南苑既久`），照抄就是复现 2026-10-04 的 39/81 死链。首页在构建期用 `getCollection('blog')` 按 `post.data.title` 映射（同硬规则 7）。
+7. **`src/scripts/` 的脚本由 Astro 打包成模块**：`<script src="../scripts/x.js">` 会被转成 `import "<src>"`（证据：`node_modules/astro/dist/vite-plugin-astro/index.js:142-145`）。**不要**改用 `is:inline`，否则每次换页都会重跑并重复注册 document 监听。
+
+**发布门禁**：本次**没有新增 dist 根级入口**（新脚本与新组件都被打进 `dist/_astro/` 的哈希文件），所以 `scripts/publish.ps1` 的 `$required` 与线上 curl 校验表**无需改动**。

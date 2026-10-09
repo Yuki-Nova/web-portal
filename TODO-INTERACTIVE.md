@@ -23,12 +23,12 @@
 
 ### 模块一：鼠标与指针微交互（Ink & Seal Pointer）
 
-- [ ] **Task 1.1: 朱砂落印点击涟漪 (Cinnabar Stamp Ripple)**
+- [x] **Task 1.1: 朱砂落印点击涟漪 (Cinnabar Stamp Ripple)**
   - **表现**：全站任意空白处点击时，在光标中心展开一圈极淡的朱砂红波纹（`--color-seal-soft`），并随机隐现一枚淡红小印章轮廓（如「雪」、「墨」、「诗」、「印」、「云」篆字）。
   - **实现方案**：纯原生 JS 监听 `pointerdown`，动态生成带有 CSS keyframe 动画的轻量 DOM 节点，400ms 后自销毁；避免使用 heavy canvas。
   - **落位**：`src/scripts/stamp-ripple.js`，通过 `BaseLayout.astro` 引入。
 
-- [ ] **Task 1.2: 水墨游丝笔触光标 (Ink Trail Cursor)**
+- [x] **Task 1.2: 水墨游丝笔触光标 (Ink Trail Cursor)**
   - **表现**：
     - 默认光标跟随一个微小墨点；
     - 移动时后方拖曳出 15~20 节水墨骨架游丝，如毛笔落纸般平滑减速、淡出；
@@ -40,14 +40,14 @@
 
 ### 模块二：宣纸与卡片实体物理感（Paper Tilt & Sheen）
 
-- [ ] **Task 2.1: 宣纸卡片 3D 微倾斜 (Paper 3D Tilt)**
+- [x] **Task 2.1: 宣纸卡片 3D 微倾斜 (Paper 3D Tilt)**
   - **表现**：
     - 鼠标悬停在卡片（首页 5 大入口卡片、`/archives` 文章卡片）时，卡片随鼠标相对位置产生微小 3D 旋转（角度 ≤ 4deg）；
     - 移出时光滑缓动复位。
   - **实现方案**：基于 CSS Transform 变量驱动（`--tilt-x`, `--tilt-y`），通过极简事件监听注入样式，避免引入重型外部依赖。
   - **落位**：`src/scripts/paper-tilt.js`，通过 `data-tilt` 属性在目标卡片声明式激活。
 
-- [ ] **Task 2.2: 宣纸反光流动微光 (Paper Sheen)**
+- [x] **Task 2.2: 宣纸反光流动微光 (Paper Sheen)**
   - **表现**：卡片倾斜时，表面划过一层倾斜的漫反射微光（纸张纤维光泽），与 3D 角度联动。
   - **实现方案**：CSS 伪元素 `::after` 配合径向渐变与混合模式，通过 CSS 变量动态偏移。
 
@@ -55,7 +55,7 @@
 
 ### 模块三：文人雅趣特色交互（Poem Fortune / 拈阄日签）
 
-- [ ] **Task 3.1: 抽诗签交互挂件组件 (`PoemFortune.vue`)**
+- [x] **Task 3.1: 抽诗签交互挂件组件 (`PoemFortune.vue`)**
   - **表现**：
     - 首页右下角常驻一枚古朴的「诗签」挂牌（朱印小签筒或折角木质签）；
     - 点击后触发抽签动画（竹签轻摇 / 诗笺缓缓展开）；
@@ -71,7 +71,7 @@
 
 ### 模块四：长文阅读伴侣（Reading Seal Companion）
 
-- [ ] **Task 4.1: 朱砂印阅读进度指示器 (`ReadingSeal.vue`)**
+- [x] **Task 4.1: 朱砂印阅读进度指示器 (`ReadingSeal.vue`)**
   - **表现**：
     - 在博文详情页（`src/pages/posts/[slug].astro`）右下角显示一枚极简正方形朱砂石印章徽标；
     - 印章内部刻有古典篆文「顶」或印纹；
@@ -83,7 +83,7 @@
 
 ### 模块五：意境环境氛围（Yuki Snow Particles）
 
-- [ ] **Task 5.1: 随风碎雪粒子 Canvas (`YukiSnow.vue`)**
+- [x] **Task 5.1: 随风碎雪粒子 Canvas (`YukiSnow.vue`)**
   - **表现**：
     - 呼应站名 "Yuki"（雪）：背景层下落稀疏、轻柔的碎雪粒子（数量控制在 35~45 颗）；
     - **风场扰动交互**：鼠标快速掠过屏幕时，雪花受到物理排斥或微风推挤，自然向两侧翩跹掠开；

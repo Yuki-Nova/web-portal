@@ -8,9 +8,9 @@
 
 | 路由 | 内容 | 数据来源 |
 |---|---|---|
-| `/` | 个人名片 + 门户入口卡片（走 BaseLayout 统一骨架） | 静态 |
+| `/` | 个人名片 + 门户入口卡片 + 拈阄·抽诗签挂件（走 BaseLayout 统一骨架） | 静态 + `src/data/poem-quotes.json` |
 | `/poems` | 诗词墙（纯诗词页，无存稿列表与个人信息卡） | `src/data/poetry-wall.json`（由 `scripts/sync-poetry-wall.mjs` 从 `src/content/blog/` 生成，**禁止手改**） |
-| `/posts/[slug]` | 文章详情页（居中单栏、上下篇导航、朱砂钤印） | `src/content/blog/*.md` |
+| `/posts/[slug]` | 文章详情页（居中单栏、上下篇导航、朱砂钤印、阅读进度印章） | `src/content/blog/*.md` |
 | `/archives` | 文集编年（每页 20 篇，构建期分页） | content collection |
 | `/categories` `/tags` | 分类 / 标签索引卡片；详情页 `/categories/<分类>/`、`/tags/<标签>/` 各自分页 | content collection |
 | `/images` | 影廊（353 张，纯静态快照 + 可选 OSS 实时同步） | `public/gallery.json` |
@@ -18,6 +18,25 @@
 | `/404` | 未寻得页（部署时 Nginx 需配 `error_page 404 /404.html;` 才生效） | 静态 |
 
 `bookswich`（教材解析工作台）不在本工程内，代码不合并；门户导航与名片页**不提供入口**（2026-10-03 按用户要求移除）。
+
+## 可交互层（2026-10-09 落地）
+
+全站装饰性交互集中在**一份降级基础设施**上，规划与验收清单见 [TODO-INTERACTIVE.md](TODO-INTERACTIVE.md)。
+
+| 交互 | 落位 | 触发条件 |
+|---|---|---|
+| 朱砂落印点击涟漪 | `src/scripts/stamp-ripple.js` | 鼠标点击「非交互」空白处；触屏与减弱动效下不注册 |
+| 水墨游丝光标 | `src/scripts/ink-cursor.js` | 精细指针设备；**保留系统原生光标**，游丝只作拖尾 |
+| 宣纸卡片 3D 微倾 + 反光 | `src/scripts/paper-tilt.js` + `global.css` 的 `[data-tilt]` | 首页入口卡、`/categories`、`/tags` 索引卡；≤4deg |
+| 拈阄·抽诗签 | `src/components/PoemFortune.vue` + `src/data/poem-quotes.json` | 首页右下角常驻，可抽签/前往品读/复制名句 |
+| 朱砂印阅读进度 | `src/components/ReadingSeal.vue` | 文章页滚动注墨、点击回顶 |
+| 随风碎雪 + 页脚开关 | `src/components/YukiSnow.vue` + `SnowToggle.vue` + `src/scripts/snow-state.js` | 默认开启，`localStorage['yuki-snow']` 持久化；减弱动效下停帧 |
+
+约定（改这块前先看 `AGENTS.md` 第八节）：
+
+- `src/scripts/motion.js` 是**唯一**的降级判定与换页生命周期入口（`decorationEnabled()` / `onPageLoad()` / `createRafLoop()`）；不要在业务脚本里各写一份介质查询。
+- 两条门禁必须同时成立才运行动效：`(hover: hover) and (pointer: fine)` 且非 `(prefers-reduced-motion: reduce)`；`document.hidden` 时 rAF 自动停帧。
+- 所有位移/衰减按帧间隔换算，保证 60Hz 与高刷屏观感一致（实测本机 headless 为 145Hz）。
 
 ## 怎么跑
 
@@ -75,7 +94,7 @@ pwsh -NoProfile -File scripts\publish.ps1 -SkipBuild
 ## 技术栈
 
 - **Astro 5.18**（`output: 'static'`，当前 107 个静态页面）
-- **Vue 3.5 Islands**（填词引擎、相册、诗词墙、搜索、主题切换共 5 个交互孤岛）
+- **Vue 3.5 Islands**（填词引擎、相册、诗词墙、搜索、主题切换、飘雪开关、抽诗签、阅读印章等交互孤岛；**岛数随功能增减，不要记死某个数字**）
 - **Tailwind CSS 3.4**（配置式主题，颜色全部走 CSS 变量）
 - 设计系统「纸墨·新文人」：`src/styles/tokens.css` 是唯一令牌源
 
@@ -86,11 +105,13 @@ src/
 ├── content/blog/          81 篇诗词 Markdown（唯一事实源，新文章写这里）
 ├── data/
 │   ├── gallery.json       相册数据（由 scripts/extract-gallery.js 生成）
+│   ├── poem-quotes.json   81 条诗词金句（抽诗签用；title 必须与 content/blog 的 frontmatter title 逐字一致）
 │   └── poetry-wall.json   诗词墙数据（由 scripts/sync-poetry-wall.mjs 从 content/blog 生成，禁止手改）
 ├── poetry-engine/         填词引擎：core 算法 + composables + 韵书/平仄数据
+├── scripts/               客户端装饰性交互（motion.js 为降级/换页基础设施 + 四个原生脚本）
 ├── components/
 │   ├── poetry/            填词案头 UI（自 poetry_tool 迁移）
-│   └── *.astro|vue        全站组件（Header/Footer/侧栏/相册/诗词墙/搜索）
+│   └── *.astro|vue        全站组件（Header/Footer/侧栏/相册/诗词墙/搜索/诗签/阅读印章/飘雪）
 ├── layouts/BaseLayout.astro
 ├── pages/                 路由
 └── styles/
@@ -119,6 +140,10 @@ scripts/extract-gallery.js 从旧相册静态快照抽取 gallery.json
 | ~~中~~ 已修（2026-10-03） | Google Fonts 外链会拖住 `load` 事件（外网受限时首屏被拖慢）；已改为 `media="print"` 非阻塞加载 + `noscript` 兜底 | `src/layouts/BaseLayout.astro` |
 | ~~中~~ 已修（2026-10-03） | 首页曾自带独立 `<html>` 骨架、拿不到全站导航；已并入 BaseLayout，重做为「名片 + 门户入口卡片」 | `src/pages/index.astro` |
 | ~~低~~ 已修（2026-10-03） | Header 曾硬编码深色条 `#1a1c20` + emoji 图标；已改为纸墨令牌体系（纸底 + 墨字 + 印章红下划线）并去除 emoji | `src/components/Header.astro` |
+| ~~中~~ 已修（2026-10-09） | 动效降级双向失效：`matchMedia('(a), (b)')` 合并写法的 `change` 事件在「精细指针恒为真」时不触发（实测一次开/关切换收到 0 个事件，单一查询各 1 个），导致减弱动效开/关都不生效；已改为分别订阅两条查询 | `src/scripts/motion.js` 的 `watchDecoration()` |
+| ~~中~~ 已修（2026-10-09） | 阅读印章在页底被页脚盖住：`main` 上的 `z-10` 建出层叠上下文，把内部 `z-40` 的固定挂件关在里面；已改为 `main`/`footer` 只加 `position: relative` 不加 `z-index` | `src/layouts/BaseLayout.astro` |
+| ~~低~~ 已修（2026-10-09） | 昼间态碎雪在宣纸上完全不可见（白填充 + 7% 墨边，且描边还要再乘一次填充透明度，实际不足 5%）；已提高墨边并把描边透明度独立出来 | `src/components/YukiSnow.vue` |
+| 低 | 主题只按「首次加载 / 换页」应用，系统深浅色**实时**切换不会跟随（需手动刷新）；属既有行为，未在本轮改动 | `src/layouts/BaseLayout.astro` |
 | 低 | 无自动化测试（旧 poetry_tool 的 vitest 用例未随引擎迁移） | — |
 
 ## 相关文档
